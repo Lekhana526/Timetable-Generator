@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Timetable Generator - Evolve Conflict-Free Schedules</title>
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- html2pdf.js for styling PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Custom stylesheet -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        /* ===== FULL-PAGE ABOUT OVERLAY ===== */
+        #about-fullpage-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: var(--bg-page, #f7f3ef);
+            overflow-y: auto;
+        }
+        #about-fullpage-overlay.active {
+            display: block;
+            animation: aboutSlideIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        @keyframes aboutSlideIn {
+            from { transform: translateY(30px); }
+            to   { transform: translateY(0); }
+        }
+        .about-overlay-topbar {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 16px 40px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .about-overlay-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-page);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 18px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Poppins', sans-serif;
+        }
+        .about-overlay-back:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+        .about-overlay-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .about-overlay-brand i { color: var(--primary); font-size: 20px; }
+        .about-overlay-brand span { font-size: 17px; font-weight: 700; color: var(--text-primary); }
+        .about-overlay-brand span em { color: var(--primary); font-style: normal; }
+        .about-overlay-body {
+            max-width: 1020px;
+            margin: 48px auto 80px;
+            padding: 0 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+        .about-overlay-hero { text-align: center; }
+        .about-overlay-hero h1 {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        .about-overlay-hero p { font-size: 16px; color: var(--text-secondary); }
+        .about-ov-card {
+            padding: 32px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            transition: var(--transition);
+        }
+        .about-ov-card:hover { box-shadow: 0 8px 32px rgba(231,111,81,0.13); transform: translateY(-2px); }
+        .about-ov-section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .about-ov-features {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 24px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+        @media (max-width: 900px) {
+            .about-ov-features { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .about-ov-features { grid-template-columns: 1fr; }
+        }
+        .about-ov-feature { display: flex; align-items: flex-start; gap: 12px; }
+        .about-ov-feature .fi { font-size: 18px; margin-top: 2px; }
+        .about-ov-feature h5 { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+        .about-ov-feature p { font-size: 12px; color: var(--text-secondary); line-height: 1.4; margin: 0; }
+        .about-ov-dev-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        .about-ov-dev-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 24px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            transition: var(--transition);
+        }
+        .about-ov-dev-card:hover { box-shadow: 0 8px 32px rgba(231,111,81,0.13); transform: translateY(-2px); }
+        .about-ov-avatar {
+            width: 62px; height: 62px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 22px; font-weight: 700; flex-shrink: 0;
+        }
+        .about-ov-mentor-card {
+            display: flex; flex-direction: row; gap: 24px; padding: 28px;
+            border-radius: var(--radius-md); box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color); background: var(--bg-card);
+            align-items: center; flex-wrap: wrap; transition: var(--transition);
+        }
+        .about-ov-mentor-card:hover { box-shadow: 0 8px 32px rgba(42,157,143,0.13); transform: translateY(-2px); }
+        .about-ov-mentor-avatar {
+            width: 80px; height: 80px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 28px; font-weight: 700; flex-shrink: 0;
+        }
+        .about-ov-meta-row {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 13px; color: var(--text-secondary);
+        }
+
+        /* ===== LANDING INFO STRIP ===== */
+        .landing-info-strip {
+            margin-top: 48px;
+            padding: 36px 40px;
+            background: rgba(255,255,255,0.65);
+            border: 1px solid rgba(231,111,81,0.18);
+            border-radius: 24px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(231,111,81,0.08);
+            max-width: 1240px;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        body.dark-mode .landing-info-strip {
+            background: rgba(35, 30, 24, 0.75);
+            border-color: rgba(244, 162, 97, 0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .landing-info-heading {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .landing-info-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #E76F51, #F4A261);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 7px 18px;
+            border-radius: 50px;
+            margin-bottom: 14px;
+            letter-spacing: 0.4px;
+            box-shadow: 0 4px 12px rgba(231,111,81,0.25);
+        }
+        .landing-info-heading p {
+            font-size: 15.5px;
+            color: var(--text-secondary, #5a4a3a);
+            line-height: 1.65;
+            margin: 0 auto;
+            max-width: 820px;
+        }
+        body.dark-mode .landing-info-heading p {
+            color: var(--text-secondary);
+        }
+        .landing-info-features {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        .landing-info-feat {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 20px 18px;
+            background: rgba(255,255,255,0.85);
+            border-radius: 16px;
+            border: 1px solid rgba(231,111,81,0.12);
+            transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            height: 100%;
+        }
+        body.dark-mode .landing-info-feat {
+            background: rgba(43, 36, 28, 0.85);
+            border-color: rgba(244, 162, 97, 0.15);
+        }
+        .landing-info-feat:hover {
+            background: #ffffff;
+            border-color: rgba(231,111,81,0.3);
+            box-shadow: 0 8px 24px rgba(231,111,81,0.14);
+            transform: translateY(-3px);
+        }
+        body.dark-mode .landing-info-feat:hover {
+            background: rgba(53, 43, 33, 0.95);
+            border-color: var(--primary);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        .lif-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .landing-info-feat h5 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary, #2d2010);
+            margin-bottom: 5px;
+            margin-top: 0;
+            line-height: 1.3;
+        }
+        .landing-info-feat p {
+            font-size: 12.5px;
+            color: var(--text-secondary, #7a6a58);
+            line-height: 1.5;
+            margin: 0;
+        }
+        @media (max-width: 1024px) {
+            .landing-info-features { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .landing-info-strip { padding: 24px 18px; margin-top: 32px; }
+            .landing-info-features { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Mode Selection Overlay Screen -->
+    <div id="mode-select-screen" class="mode-select-overlay">
+        <!-- Top-Left Warm Gradient Blob -->
+        <div class="mode-select-bg-blobs">
+            <div class="blob blob-1"></div>
+            <div class="blob blob-2"></div>
+        </div>
+
+        <!-- Large Background Building Illustrations (Behind Card Area) -->
+        <div class="landing-bg-buildings">
+            <!-- University Building (Left) -->
+            <svg class="bg-building bg-building-left" viewBox="0 0 400 320" fill="none" stroke="#E76F51" stroke-width="1.2" xmlns="http://www.w3.org/2000/svg">
+                <path d="M30 300 H370 M50 300 V150 H160 V300 M160 300 V130 H280 V300 M280 300 V160 H350 V300"/>
+                <polygon points="105,150 50,150 105,100 160,150"/>
+                <polygon points="220,130 160,130 220,70 280,130"/>
+                <polygon points="315,160 280,160 315,130 350,160"/>
+                <rect x="75" y="180" width="30" height="40" rx="3"/>
+                <rect x="115" y="180" width="30" height="40" rx="3"/>
+                <rect x="75" y="240" width="30" height="40" rx="3"/>
+                <rect x="115" y="240" width="30" height="40" rx="3"/>
+                <rect x="185" y="160" width="30" height="40" rx="3"/>
+                <rect x="225" y="160" width="30" height="40" rx="3"/>
+                <rect x="185" y="220" width="30" height="40" rx="3"/>
+                <rect x="225" y="220" width="30" height="40" rx="3"/>
+                <rect x="295" y="190" width="25" height="35" rx="3"/>
+                <rect x="295" y="245" width="25" height="35" rx="3"/>
+                <path d="M200 300 V260 A 20 20 0 0 1 240 260 V300"/>
+                <line x1="220" y1="70" x2="220" y2="40"/>
+                <polygon points="220,40 245,50 220,60" fill="#E76F51" stroke="none" opacity="0.4"/>
+                <circle cx="220" cy="100" r="12"/>
+            </svg>
+            <!-- School Building (Right) -->
+            <svg class="bg-building bg-building-right" viewBox="0 0 400 320" fill="none" stroke="#E76F51" stroke-width="1.2" xmlns="http://www.w3.org/2000/svg">
+                <path d="M30 300 H370 M60 300 V160 H340 V300"/>
+                <polygon points="200,80 55,160 345,160"/>
+                <rect x="170" y="80" width="60" height="80"/>
+                <polygon points="200,40 165,80 235,80"/>
+                <line x1="200" y1="40" x2="200" y2="10"/>
+                <polygon points="200,10 230,22 200,34" fill="#E76F51" stroke="none" opacity="0.4"/>
+                <circle cx="200" cy="115" r="14"/>
+                <rect x="90" y="190" width="35" height="40" rx="3"/>
+                <rect x="140" y="190" width="35" height="40" rx="3"/>
+                <rect x="90" y="245" width="35" height="40" rx="3"/>
+                <rect x="140" y="245" width="35" height="40" rx="3"/>
+                <rect x="225" y="190" width="35" height="40" rx="3"/>
+                <rect x="275" y="190" width="35" height="40" rx="3"/>
+                <rect x="225" y="245" width="35" height="40" rx="3"/>
+                <rect x="275" y="245" width="35" height="40" rx="3"/>
+                <path d="M180 300 V265 A 20 20 0 0 1 220 265 V300"/>
+            </svg>
+        </div>
+
+        <!-- Prominent Bottom Wave Patterns -->
+        <div class="landing-waves">
+            <svg viewBox="0 0 1440 320" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0,192L40,186.7C80,181,160,171,240,176C320,181,400,203,480,213.3C560,224,640,224,720,208C800,192,880,160,960,154.7C1040,149,1120,171,1200,181.3C1280,192,1360,192,1400,192L1440,192L1440,320L1400,320C1360,320,1280,320,1200,320C1120,320,1040,320,960,320C880,320,800,320,720,320C640,320,560,320,480,320C400,320,320,320,240,320C160,320,80,320,40,320L0,320Z" fill="rgba(244, 162, 97, 0.12)"></path>
+                <path d="M0,256L48,245.3C96,235,192,213,288,208C384,203,480,213,576,229.3C672,245,768,267,864,261.3C960,256,1056,224,1152,213.3C1248,203,1344,213,1392,218.7L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" fill="rgba(231, 111, 81, 0.10)"></path>
+                <path d="M0,288L60,282.7C120,277,240,267,360,266.7C480,267,600,277,720,277.3C840,277,960,267,1080,261.3C1200,256,1320,256,1380,256L1440,256L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z" fill="rgba(249, 199, 132, 0.14)"></path>
+            </svg>
+        </div>
+
+        <div class="mode-select-container">
+            <!-- Header -->
+            <div class="mode-select-header">
+                <h2 class="landing-main-title">Select <span class="coral-gradient-text">Timetable Generator</span></h2>
+                <p class="landing-subtitle">Choose your institution type to launch the customized scheduling system</p>
+            </div>
+
+            <!-- Cards Grid -->
+            <div class="mode-cards-grid">
+                <!-- UNIVERSITY CARD -->
+                <div class="mode-card" id="btn-select-university-mode">
+                    <div class="mode-card-badge">UNIVERSITY</div>
+                    
+                    <div class="mode-card-icon-wrapper">
+                        <div class="mode-card-icon-glow"></div>
+                        <div class="mode-card-icon university-icon">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                    </div>
+
+                    <h3>University Timetable</h3>
+                    <p>Designed for colleges and universities with multi-batch departments, theory/lab rooms, credit hours, and parallel student groups.</p>
+                    
+                    <button type="button" class="btn btn-primary btn-block landing-btn">Launch University Mode <i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+
+                <!-- SCHOOL CARD -->
+                <div class="mode-card" id="btn-select-mode-school">
+                    <div class="mode-card-badge">SCHOOL</div>
+                    
+                    <div class="mode-card-icon-wrapper">
+                        <div class="mode-card-icon-glow"></div>
+                        <div class="mode-card-icon school-icon">
+                            <i class="fa-solid fa-school"></i>
+                        </div>
+                    </div>
+
+                    <h3>School Timetable</h3>
+                    <p>Tailored for schools with Class/Grade schedules, teacher allocations, and weekly subject periods.</p>
+                    
+                    <button type="button" class="btn btn-primary btn-block school-launch-btn landing-btn">Launch School Mode <i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- ===== WHAT IS THIS? INFO STRIP ===== -->
+            <div class="landing-info-strip">
+                <div class="landing-info-heading">
+                    <span class="landing-info-pill"><i class="fa-solid fa-wand-magic-sparkles"></i> What is this?</span>
+                    <p>An AI-powered scheduling engine that automatically builds <strong>conflict-free timetables</strong> for universities and schools using <strong>Genetic Algorithms</strong> — no manual effort needed.</p>
+                </div>
+                <div class="landing-info-features">
+                    <div class="landing-info-feat">
+                        <div class="lif-icon" style="background:rgba(231,111,81,0.12);color:#E76F51;"><i class="fa-solid fa-circle-nodes"></i></div>
+                        <div>
+                            <h5>Genetic Algorithm Engine</h5>
+                            <p>Evolves hundreds of candidate schedules over generations to find the optimal, conflict-free solution automatically.</p>
+                        </div>
+                    </div>
+                    <div class="landing-info-feat">
+                        <div class="lif-icon" style="background:rgba(42,157,143,0.12);color:#2A9D8F;"><i class="fa-solid fa-calendar-check"></i></div>
+                        <div>
+                            <h5>Zero Scheduling Conflicts</h5>
+                            <p>No teacher, room, or student group is ever double-booked across the entire weekly timetable.</p>
+                        </div>
+                    </div>
+                    <div class="landing-info-feat">
+                        <div class="lif-icon" style="background:rgba(69,123,157,0.12);color:#457B9D;"><i class="fa-solid fa-bolt"></i></div>
+                        <div>
+                            <h5>Instant Generation</h5>
+                            <p>Enter rooms, faculty, and subjects — a complete exportable schedule is produced in under 2 seconds.</p>
+                        </div>
+                    </div>
+                    <div class="landing-info-feat">
+                        <div class="lif-icon" style="background:rgba(249,199,132,0.18);color:#c98a00;"><i class="fa-solid fa-file-export"></i></div>
+                        <div>
+                            <h5>Export to PDF &amp; Excel</h5>
+                            <p>Download your timetable as a print-ready PDF or Excel sheet for sharing and record-keeping.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- YouTube Video Walkthrough Link Section -->
+                <div class="landing-youtube-section" style="margin-top: 28px; padding-top: 24px; border-top: 1px solid rgba(231,111,81,0.15); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <!-- YouTube Thumbnail with play button overlay -->
+                        <a href="https://youtu.be/FKwexdLrGoI?si=Mgy3d0smmerl4YGc" target="_blank" rel="noopener noreferrer" style="flex-shrink: 0; display: block; position: relative; width: 120px; height: 68px; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-decoration: none;">
+                            <img src="https://img.youtube.com/vi/FKwexdLrGoI/mqdefault.jpg" alt="Video Thumbnail" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.onerror=null;this.src='https://img.youtube.com/vi/FKwexdLrGoI/0.jpg';">
+                            <!-- Play button overlay -->
+                            <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.25)'">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255,0,0,0.9); display: flex; align-items: center; justify-content: center;">
+                                    <svg viewBox="0 0 24 24" fill="white" width="14" height="14" style="margin-left: 2px;"><polygon points="5,3 19,12 5,21"/></svg>
+                                </div>
+                            </div>
+                        </a>
+                        <div>
+                            <h5 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 0 0 2px 0;">Watch Video Walkthrough</h5>
+                            <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">Watch full step-by-step video demonstration of the project on YouTube</p>
+                        </div>
+                    </div>
+                    <a href="https://youtu.be/FKwexdLrGoI?si=Mgy3d0smmerl4YGc" target="_blank" rel="noopener noreferrer" class="btn" style="background: linear-gradient(135deg, #FF0000, #CC0000); color: #ffffff; font-weight: 600; padding: 10px 22px; border-radius: 30px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(255, 0, 0, 0.25); text-decoration: none; transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 18px rgba(255,0,0,0.35)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 14px rgba(255,0,0,0.25)'">
+                        <i class="fa-brands fa-youtube" style="font-size: 18px;"></i> Watch Demo Video <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 12px; margin-left: 2px;"></i>
+                    </a>
+                </div>
+            </div>
+            <!-- ===== END INFO STRIP ===== -->
+
+        </div>
+
+        <!-- Bottom-Right Corner Decoration -->
+        <div class="landing-corner-decoration">
+            <svg viewBox="0 0 220 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Plant Pot -->
+                <path d="M12 155 L22 180 H52 L62 155 Z" fill="#E76F51"/>
+                <rect x="16" y="150" width="42" height="8" rx="4" fill="#C85236"/>
+                <ellipse cx="37" cy="140" rx="18" ry="16" fill="#66BB6A"/>
+                <ellipse cx="28" cy="132" rx="12" ry="12" fill="#81C784"/>
+                <ellipse cx="46" cy="132" rx="12" ry="12" fill="#4CAF50"/>
+                <ellipse cx="37" cy="126" rx="10" ry="10" fill="#66BB6A"/>
+
+                <!-- Stacked Books -->
+                <rect x="55" y="152" width="85" height="18" rx="4" fill="#F4A261"/>
+                <rect x="55" y="151" width="85" height="3" rx="1" fill="#E8944E" opacity="0.6"/>
+                <rect x="58" y="136" width="80" height="16" rx="3" fill="#E76F51"/>
+                <rect x="58" y="135" width="80" height="3" rx="1" fill="#C85236" opacity="0.6"/>
+                <rect x="56" y="122" width="82" height="14" rx="3" fill="#F9C784"/>
+                <rect x="56" y="121" width="82" height="3" rx="1" fill="#E8B84E" opacity="0.5"/>
+
+                <!-- Desk Calendar -->
+                <rect x="130" y="42" width="78" height="72" rx="8" fill="#FFFFFF" stroke="#F0D5C0" stroke-width="2"/>
+                <rect x="130" y="42" width="78" height="24" rx="8" fill="#E76F51"/>
+                <rect x="166" y="42" width="42" height="24" rx="0" fill="#E76F51"/>
+                <!-- Spiral rings -->
+                <circle cx="148" cy="36" r="4" fill="#C85236"/>
+                <circle cx="190" cy="36" r="4" fill="#C85236"/>
+                <line x1="148" y1="30" x2="148" y2="42" stroke="#8B7B6B" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="190" y1="30" x2="190" y2="42" stroke="#8B7B6B" stroke-width="2.5" stroke-linecap="round"/>
+                <!-- Calendar grid boxes -->
+                <rect x="140" y="74" width="12" height="10" rx="2" fill="#FDE8DE"/>
+                <rect x="157" y="74" width="12" height="10" rx="2" fill="#FDE8DE"/>
+                <rect x="174" y="74" width="12" height="10" rx="2" fill="#FDE8DE"/>
+                <rect x="191" y="74" width="12" height="10" rx="2" fill="#FDE8DE"/>
+                <rect x="140" y="89" width="12" height="10" rx="2" fill="#FDE8DE"/>
+                <rect x="157" y="89" width="12" height="10" rx="2" fill="#FDE8DE"/>
+                <rect x="174" y="89" width="12" height="10" rx="2" fill="#E76F51" opacity="0.3"/>
+                <rect x="191" y="89" width="12" height="10" rx="2" fill="#FDE8DE"/>
+                <!-- Checkmark badge -->
+                <circle cx="198" cy="52" r="8" fill="#FFFFFF" opacity="0.25"/>
+                <path d="M194 52 L197 55 L203 49" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- UNIVERSITY APP WRAPPER -->
+    <div id="university-app" style="display: none;">
+        <!-- Sticky Navbar -->
+        <nav class="navbar" id="app-navbar">
+            <div class="nav-container">
+                <a href="#" class="brand-logo" id="nav-logo">
+                    <div class="logo-icon">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <span class="brand-text">Timetable <span class="accent-text">Generator</span></span>
+                </a>
+                
+                <div class="nav-links">
+                    <a href="#home" class="nav-link active" data-tab="home"><i class="fa-solid fa-house"></i> Home</a>
+                    <a href="#dashboard" class="nav-link" data-tab="dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+                    <a href="#generator" class="nav-link" data-tab="generator"><i class="fa-solid fa-sliders"></i> Generator</a>
+                    <a href="#timetable" class="nav-link" data-tab="timetable" id="nav-link-timetable"><i class="fa-solid fa-calendar-days"></i> Timetable</a>
+                </div>
+
+                <div class="nav-actions">
+                    <button type="button" class="btn btn-secondary btn-sm switch-mode-btn" title="Switch Generator Mode" style="font-size: 12px; padding: 6px 14px;">
+                        <i class="fa-solid fa-arrows-rotate"></i> Switch Mode
+                    </button>
+                    <button id="dark-mode-btn" class="icon-action-btn" title="Toggle Theme">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <button class="mobile-menu-toggle" id="mobile-toggle" aria-label="Toggle menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+    <!-- App Chamber Layout -->
+    <div class="app-layout">
+        <!-- Sidebar Navigation (Desktop helper) -->
+        <aside class="sidebar">
+            <div class="sidebar-menu">
+                <a href="#home" class="sidebar-item active" data-tab="home">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Home</span>
+                </a>
+                <a href="#dashboard" class="sidebar-item" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#generator" class="sidebar-item" data-tab="generator">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Generator Panel</span>
+                </a>
+                <a href="#timetable" class="sidebar-item" data-tab="timetable" id="sidebar-link-timetable">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    <span>View Schedule</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <main class="main-content">
+            
+            <!-- SECTION 1: HOME PAGE -->
+            <section id="tab-home" class="tab-panel active">
+                <div class="hero-section">
+                    <div class="hero-text-content">
+                        <div class="badge"><i class="fa-solid fa-circle-check"></i> Conflict-Free Generation</div>
+                        <h1 class="hero-title">University <br><span class="gradient-text">Timetable Generator</span></h1>
+                        <p class="hero-subtitle">Generate conflict-free academic schedules instantly. Perfect for managing classrooms, teachers, and labs.</p>
+                        
+                        <div class="hero-actions">
+                            <a href="#generator" class="btn btn-primary btn-lg" onclick="switchTab('generator')">
+                                <i class="fa-solid fa-sliders"></i> Start Scheduling
+                            </a>
+                        </div>
+
+                        <div class="hero-stats-mini">
+                            <div class="mini-stat">
+                                <span class="stat-number">100%</span>
+                                <span class="stat-label">Conflict Free</span>
+                            </div>
+                            <div class="mini-stat">
+                                <span class="stat-number">&lt; 2s</span>
+                                <span class="stat-label">Evolution Time</span>
+                            </div>
+                            <div class="mini-stat">
+                                <span class="stat-number">Auto</span>
+                                <span class="stat-label">Room & Lab Allocation</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-image-container">
+                        <img src="/static/assets/hero.png" alt="University Timeline Illustration" class="hero-illustration" onerror="this.src='https://illustrations.popsy.co/amber/education.svg'">
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- SECTION 2: DASHBOARD PAGE -->
+            <section id="tab-dashboard" class="tab-panel">
+                <div class="dashboard-header">
+                    <h2>Academic Dashboard</h2>
+                    <p class="section-desc">Real-time statistics of resources and generation histories.</p>
+                </div>
+
+                <!-- Stats Counters Grid -->
+                <div class="dashboard-stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="stat-card">
+                        <div class="stat-icon-wrapper orange"><i class="fa-solid fa-university"></i></div>
+                        <div class="stat-card-info">
+                            <h3 id="stat-departments">2</h3>
+                            <p>Active Batches / Depts</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon-wrapper gold"><i class="fa-solid fa-chalkboard-user"></i></div>
+                        <div class="stat-card-info">
+                            <h3 id="stat-faculty">7</h3>
+                            <p>Registered Faculty</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon-wrapper peach"><i class="fa-solid fa-door-open"></i></div>
+                        <div class="stat-card-info">
+                            <h3 id="stat-rooms">4</h3>
+                            <p>Halls & Labs Registered</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-details" style="grid-template-columns: 1fr;">
+                    <!-- Current Resources Panel -->
+                    <div class="dashboard-card current-resources">
+                        <h3><i class="fa-solid fa-tags text-peach"></i> Resource Inventory</h3>
+                        <div class="resource-pill-container">
+                            <h4>Theory Rooms</h4>
+                            <div class="pill-group" id="inventory-theory-rooms">-</div>
+                            
+                            <h4>Lab Rooms</h4>
+                            <div class="pill-group" id="inventory-lab-rooms">-</div>
+
+                            <h4>Teachers Assigned</h4>
+                            <div class="pill-group" id="inventory-teachers">-</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: GENERATOR PAGE -->
+            <section id="tab-generator" class="tab-panel">
+                <div class="generator-header" style="flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <h2>Conflict-Free Scheduler Panel</h2>
+                        <p class="section-desc">Provide your classrooms, subjects, faculty and slots details, and let the algorithm do the heavy lifting.</p>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                        <button type="button" class="btn btn-secondary btn-sm" id="btn-load-presets">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Load Demo Data
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm" id="btn-save-details">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Details
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btn-load-saved-details" style="border-color: var(--success); color: var(--success);">
+                            <i class="fa-solid fa-folder-open"></i> Load Saved
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" id="btn-reset-panel">
+                            <i class="fa-solid fa-rotate-left"></i> Reset Panel
+                        </button>
+                    </div>
+                </div>
+
+                <div class="generator-workspace">
+                    <form id="timetable-form" class="card form-card">
+                        
+                        <!-- Block 1: Academic Config -->
+                        <div class="form-section">
+                            <h3 class="form-section-title"><i class="fa-solid fa-graduation-cap"></i> 1. Institute Configuration</h3>
+                            <div class="form-row col-3">
+                                <div class="form-group">
+                                    <label for="university-name">University / Institute Name</label>
+                                    <input type="text" id="university-name" placeholder="E.g. National Institute of Tech" value="IIITDM Kancheepuram" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="department-name">Department Name</label>
+                                    <input type="text" id="department-name" list="department-list" placeholder="Select or type department" required autocomplete="off" onfocus="this.setAttribute('data-old', this.value); this.value='';" onblur="if(this.value==='') this.value=this.getAttribute('data-old');">
+                                    <datalist id="department-list">
+                                        <option value="Computer Science and Engineering (CSE)">
+                                        <option value="Electronics and Communication Engineering (ECE)">
+                                        <option value="Mechanical Engineering (MECH)">
+                                        <option value="Smart Manufacturing (SM)">
+                                    </datalist>
+                                </div>
+                                <div class="form-group">
+                                    <label for="academic-term">Semester / Term</label>
+                                    <input type="text" id="academic-term" placeholder="E.g. 1st Sem 2026-2027, 2nd Sem 2026-2027" value="1st Sem 2026-2027" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Block 2: Grid and Resource Constraints -->
+                        <div class="form-section">
+                            <h3 class="form-section-title"><i class="fa-solid fa-clock"></i> 2. Grid & Slots Allocation</h3>
+                            <div class="form-row col-4">
+                                <div class="form-group">
+                                    <label for="config-days">Working Days (per week)</label>
+                                    <input type="number" id="config-days" value="5" min="1" max="7" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="config-theory-slots">Theory Periods (morning)</label>
+                                    <input type="number" id="config-theory-slots" value="4" min="1" max="10" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="config-lab-slots">Lab Periods (afternoon)</label>
+                                    <input type="number" id="config-lab-slots" value="3" min="1" max="10" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="config-mutation">Mutation Chance (entropy)</label>
+                                    <select id="config-mutation">
+                                        <option value="0.1">10% Low</option>
+                                        <option value="0.3">30% Medium</option>
+                                        <option value="0.5" selected>50% Default</option>
+                                        <option value="0.8">80% High</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row col-2">
+                                <div class="form-group">
+                                    <label for="theory-rooms-input">Theory Rooms (Comma-separated)</label>
+                                    <input type="text" id="theory-rooms-input" placeholder="R101, R102, R103" value="R101, R102" required>
+                                    <small>Rooms designated for theory lectures.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="lab-rooms-input">Lab Classrooms (Comma-separated)</label>
+                                    <input type="text" id="lab-rooms-input" placeholder="Lab1, Lab2, ComputerLab" value="LAB1, LAB2" required>
+                                    <small>Halls designated for full afternoon lab blocks.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Block 3: Dynamic Batches & Subjects Allocation -->
+                        <div class="form-section">
+                            <div class="section-title-bar">
+                                <h3 class="form-section-title"><i class="fa-solid fa-users-gear"></i> 3. Class Batches & Curriculums</h3>
+                                <button type="button" class="btn btn-secondary btn-sm" id="btn-add-batch">
+                                    <i class="fa-solid fa-plus"></i> Add Class Batch
+                                </button>
+                            </div>
+                            
+                            <!-- Batches Container -->
+                            <div id="batches-wrapper">
+                                <!-- Dynamic Batch Cards injected via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="form-actions-bottom">
+                            <button type="submit" class="btn btn-primary btn-lg btn-block" id="btn-generate-main">
+                                <i class="fa-solid fa-circle-nodes"></i> Evolve Optimum Timetable
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- SECTION 4: TIMETABLE VIEW PAGE -->
+            <section id="tab-timetable" class="tab-panel">
+                <div class="timetable-view-header">
+                    <div>
+                        <h2 id="view-uni-title">National Institute of Technology</h2>
+                        <p class="section-desc" id="view-uni-sub">Department of Computer Science | 1st Sem 2026-2027</p>
+                    </div>
+                    <div class="export-actions">
+                        <button class="btn btn-secondary btn-sm" id="btn-export-pdf"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                        <button class="btn btn-secondary btn-sm" id="btn-export-excel"><i class="fa-solid fa-file-excel"></i> Excel</button>
+                        <button class="btn btn-secondary btn-sm" id="btn-print"><i class="fa-solid fa-print"></i> Print</button>
+                    </div>
+                </div>
+
+                <!-- View Mode Toggle: Batch Timetable / Faculty Timetable -->
+                <div class="view-mode-toggle" style="display: flex; gap: 0; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; width: fit-content;">
+                    <button class="view-mode-btn active" id="btn-view-batch" style="padding: 10px 24px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; background: var(--primary); color: white; transition: all 0.2s;">
+                        <i class="fa-solid fa-calendar-days"></i> Batch Timetable
+                    </button>
+                    <button class="view-mode-btn" id="btn-view-faculty" style="padding: 10px 24px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; background: var(--bg-card); color: var(--text-secondary); transition: all 0.2s;">
+                        <i class="fa-solid fa-chalkboard-user"></i> Faculty Timetable
+                    </button>
+                </div>
+
+                <!-- ========== BATCH TIMETABLE VIEW ========== -->
+                <div id="batch-timetable-view">
+                    <!-- Batch Selection Tabs inside Timetable view -->
+                    <div class="timetable-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <div class="batch-tabs" id="timetable-batch-tabs">
+                            <!-- Dynamic Batch Pills injected via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Timetable Grid Paper Wrapper -->
+                    <div class="timetable-paper-card" id="timetable-pdf-area">
+                        <div class="timetable-watermark">
+                            Generated by Timetable Generator Engine
+                        </div>
+                        <div class="timetable-grid-header-meta">
+                            <h3 id="current-selected-batch-title">Batch: CSE_DD</h3>
+                            <p id="current-selected-batch-meta" style="display: none;"></p>
+                        </div>
+
+                        <div class="timetable-responsive-container">
+                            <table class="timetable-grid" id="timetable-table-grid">
+                                <thead>
+                                    <!-- Header injection -->
+                                </thead>
+                                <tbody>
+                                    <!-- Row injection -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="timetable-footer-signature">
+                            <div class="signature-line">
+                                <p>Dean of Academic Affairs</p>
+                            </div>
+                            <div class="signature-line">
+                                <p>Timetable Coordinator</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== FACULTY TIMETABLE VIEW ========== -->
+                <div id="faculty-timetable-view" style="display: none;">
+                    <!-- Faculty Selection Tabs -->
+                    <div style="margin-bottom: 20px;">
+                        <p style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; opacity:0.5; margin-bottom:10px;">Select Faculty</p>
+                        <div id="timetable-faculty-tabs" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            <!-- Dynamic Faculty Pills injected via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Faculty Grid Paper Wrapper -->
+                    <div class="timetable-paper-card" id="faculty-pdf-area">
+                        <div class="timetable-watermark">
+                            Faculty Schedule - Generated by Timetable Generator Engine
+                        </div>
+                        <div class="timetable-grid-header-meta">
+                            <h3 id="current-faculty-title">Faculty: --</h3>
+                            <p id="current-faculty-meta">Weekly schedule across all batches</p>
+                        </div>
+
+                        <div class="timetable-responsive-container" style="overflow-x: auto;">
+                            <table class="timetable-grid" id="faculty-table-grid">
+                                <thead>
+                                    <!-- Header injection -->
+                                </thead>
+                                <tbody>
+                                    <!-- Row injection -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- SECTION 5: ABOUT PAGE -->
+            <section id="tab-about" class="tab-panel">
+                <div class="about-header" style="text-align: center; margin-bottom: 40px;">
+                    <h2 class="gradient-text" style="font-size: 32px; font-weight: 800; margin-bottom: 10px;">About The Project</h2>
+                    <p class="section-desc" style="font-size: 16px;">Conflict-Free Timetable Generator Engine developed using Genetic Algorithms.</p>
+                </div>
+
+                <div class="about-container" style="display: flex; flex-direction: column; gap: 30px; max-width: 1000px; margin: 0 auto; padding: 0 15px;">
+                    
+                    <!-- Project Description -->
+                    <div class="card" style="padding: 32px; border-radius: var(--radius-md); box-shadow: var(--card-shadow); border: 1px solid var(--border-color); background: var(--bg-card); transition: var(--transition);">
+                        <h3 style="font-size: 20px; font-weight: 700; color: var(--primary-dark); margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-circle-info"></i> Project Overview
+                        </h3>
+                        <p style="font-size: 14.5px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 16px;">
+                            This academic scheduler is an intelligent, conflict-free timetable generation engine powered by <strong>Genetic Algorithms</strong>. It optimizes room allocations, faculty schedules, and weekly period constraints to automate institution-wide scheduling. It supports parallel student groups, credit hours, and specialized theory vs. lab assignments, ensuring conflict-free structures with optimal resource usage.
+                        </p>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                                <div style="color: var(--success); font-size: 18px; margin-top: 2px;"><i class="fa-solid fa-circle-check"></i></div>
+                                <div>
+                                    <h5 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Zero Conflicts</h5>
+                                    <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">Resolves overlapping teacher, room, and student schedules automatically.</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                                <div style="color: var(--warning); font-size: 18px; margin-top: 2px;"><i class="fa-solid fa-bolt"></i></div>
+                                <div>
+                                    <h5 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Genetic Evolution</h5>
+                                    <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">Uses selection, crossover, and mutation mechanisms to search for optimal solutions.</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                                <div style="color: var(--primary); font-size: 18px; margin-top: 2px;"><i class="fa-solid fa-arrows-spin"></i></div>
+                                <div>
+                                    <h5 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Flexible Constraints</h5>
+                                    <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">Supports credits, continuous lab sessions, and custom department criteria.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Developers Section -->
+                    <div>
+                        <h3 style="font-size: 20px; font-weight: 700; color: var(--primary-dark); margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-code"></i> Project Developers
+                        </h3>
+                        <div class="developers-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+                            <!-- Developer 1 -->
+                            <div class="card" style="padding: 24px; border-radius: var(--radius-md); box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 20px; border: 1px solid var(--border-color); background: var(--bg-card); transition: var(--transition);">
+                                <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #F9C784, #F4A261); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: 700; flex-shrink: 0; box-shadow: 0 4px 10px rgba(244,162,97,0.3);">
+                                    CL
+                                </div>
+                                <div>
+                                    <h4 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Chinnamalreddy Lekhana</h4>
+                                    <p style="font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 2px;">CSE Student</p>
+                                    <p style="font-size: 12px; color: var(--text-secondary);">IIITDM Kancheepuram</p>
+                                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-envelope" style="color: var(--primary); font-size: 12px; width: 14px; text-align: center;"></i>
+                                        <a href="mailto:cmlekhana.5@gmail.com" style="color: inherit; text-decoration: none; transition: var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='inherit'">cmlekhana.5@gmail.com</a>
+                                    </p>
+                                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-brands fa-linkedin" style="color: #0A66C2; font-size: 13px; width: 14px; text-align: center;"></i>
+                                        <a href="https://www.linkedin.com/in/c-m-lekhana-a56974376?utm_source=share_via&amp;utm_content=profile&amp;utm_medium=member_android" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; transition: var(--transition);" onmouseover="this.style.color='#0A66C2'" onmouseout="this.style.color='inherit'">LinkedIn Profile</a>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Developer 2 -->
+                            <div class="card" style="padding: 24px; border-radius: var(--radius-md); box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 20px; border: 1px solid var(--border-color); background: var(--bg-card); transition: var(--transition);">
+                                <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #E76F51, #F4A261); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: 700; flex-shrink: 0; box-shadow: 0 4px 10px rgba(231,111,81,0.3);">
+                                    VS
+                                </div>
+                                <div>
+                                    <h4 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Veeraboyena Venkata Spoorthy</h4>
+                                    <p style="font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 2px;">CSE Student</p>
+                                    <p style="font-size: 12px; color: var(--text-secondary);">IIITDM Kancheepuram</p>
+                                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-envelope" style="color: var(--primary); font-size: 12px; width: 14px; text-align: center;"></i>
+                                        <a href="mailto:spoorthyyadav8@gmail.com" style="color: inherit; text-decoration: none; transition: var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='inherit'">spoorthyyadav8@gmail.com</a>
+                                    </p>
+                                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-brands fa-linkedin" style="color: #0A66C2; font-size: 13px; width: 14px; text-align: center;"></i>
+                                        <a href="https://www.linkedin.com/in/spoorthy-veeraboyena-826255383?utm_source=share_via&amp;utm_content=profile&amp;utm_medium=member_android" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; transition: var(--transition);" onmouseover="this.style.color='#0A66C2'" onmouseout="this.style.color='inherit'">LinkedIn Profile</a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mentor Section -->
+                    <div>
+                        <h3 style="font-size: 20px; font-weight: 700; color: var(--primary-dark); margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-chalkboard-user"></i> Faculty Mentor
+                        </h3>
+                        <div class="card" style="padding: 28px; border-radius: var(--radius-md); box-shadow: var(--card-shadow); display: flex; flex-direction: row; gap: 24px; border: 1px solid var(--border-color); background: var(--bg-card); align-items: center; flex-wrap: wrap; transition: var(--transition);">
+                            <div style="width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, #2A9D8F, #457B9D); display: flex; align-items: center; justify-content: center; color: white; font-size: 30px; font-weight: 700; flex-shrink: 0; box-shadow: 0 4px 12px rgba(42,157,143,0.3);">
+                                SH
+                            </div>
+                            <div style="flex: 1; min-width: 250px;">
+                                <h4 style="font-size: 18px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">Dr. Syed Shahul Hameed A S</h4>
+                                <p style="font-size: 13.5px; font-weight: 600; color: var(--primary-dark); margin-bottom: 10px;">Assistant Professor</p>
+                                
+                                <div style="display: flex; flex-direction: column; gap: 6px;">
+                                    <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary);">
+                                        <i class="fa-solid fa-graduation-cap" style="width: 16px; text-align: center; color: var(--primary);"></i>
+                                        <span>Ph.D., NIT Puducherry</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary);">
+                                        <i class="fa-solid fa-award" style="width: 16px; text-align: center; color: var(--primary);"></i>
+                                        <span>Post-Doctoral, IIT Bombay</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary);">
+                                        <i class="fa-solid fa-envelope" style="width: 16px; text-align: center; color: var(--primary);"></i>
+                                        <a href="mailto:shahulhameed@iiitdm.ac.in" style="color: inherit; text-decoration: none; transition: var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='inherit'">shahulhameed@iiitdm.ac.in</a>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary);">
+                                        <i class="fa-solid fa-globe" style="width: 16px; text-align: center; color: var(--primary);"></i>
+                                        <a href="https://www.iiitdm.ac.in/people/faculty/shahulhameed@iiitdm.ac.in" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; transition: var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='inherit'">Faculty Profile / Contact</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- UI Overlay Components -->
+
+    <!-- Screen: Loading Animation -->
+    <div class="loading-overlay" id="generation-spinner">
+        <div class="loading-box">
+            <div class="loading-spinner-wrapper">
+                <div class="loading-atom">
+                    <div class="atom-core"></div>
+                    <div class="atom-orbit orbit-1"></div>
+                    <div class="atom-orbit orbit-2"></div>
+                    <div class="atom-orbit orbit-3"></div>
+                </div>
+            </div>
+            <h3>Evolving Timetable...</h3>
+            <p id="loading-status-text">Creating initial population (1/50)...</p>
+            <div class="loader-bar-outer">
+                <div class="loader-bar-inner" id="loading-progress-bar"></div>
+            </div>
+            <span class="loading-quote">"Resolving room allocation vectors..."</span>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-bin"></div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <i class="fa-solid fa-graduation-cap"></i> Timetable Generator
+            </div>
+            <p class="footer-copy">&copy; 2026 University Schedule Assistant. Evolved conflict-free models.</p>
+            <div class="footer-social" style="display: flex; align-items: center; gap: 15px;">
+                <a href="#about" class="footer-link" onclick="event.preventDefault(); showAboutPage();" style="color: var(--primary); font-weight: 600; text-decoration: none; font-size: 13px; cursor: pointer; transition: var(--transition);"><i class="fa-solid fa-circle-info"></i> About Project</a>
+            </div>
+        </div>
+    </footer>
+    </div>
+    <!-- END UNIVERSITY APP WRAPPER -->
+
+    <!-- SCHOOL APP WRAPPER -->
+    <div id="school-app" style="display: none;">
+        <!-- Sticky Navbar for School -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <a href="#" class="brand-logo">
+                    <div class="logo-icon">
+                        <i class="fa-solid fa-school"></i>
+                    </div>
+                    <span class="brand-text">School Timetable <span class="accent-text">Generator</span></span>
+                </a>
+                
+                <div class="nav-links">
+                    <a href="#school-tab-home" class="nav-link school-nav-link active" data-tab="school-tab-home"><i class="fa-solid fa-house"></i> Home</a>
+                    <a href="#school-config" class="nav-link school-nav-link" data-tab="school-config"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+                    <a href="#school-generator" class="nav-link school-nav-link" data-tab="school-generator"><i class="fa-solid fa-sliders"></i> Generator</a>
+                    <a href="#school-timetable" class="nav-link school-nav-link" data-tab="school-timetable"><i class="fa-solid fa-calendar-days"></i> Timetable</a>
+                </div>
+
+                <div class="nav-actions">
+                    <button type="button" class="btn btn-secondary btn-sm switch-mode-btn" title="Switch Generator Mode" style="font-size: 12px; padding: 6px 14px;">
+                        <i class="fa-solid fa-arrows-rotate"></i> Switch Mode
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- App Layout for School -->
+        <div class="app-layout">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-menu">
+                    <a href="#school-tab-home" class="sidebar-item school-sidebar-item active" data-tab="school-tab-home">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Home</span>
+                    </a>
+                    <a href="#school-config" class="sidebar-item school-sidebar-item" data-tab="school-config">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#school-generator" class="sidebar-item school-sidebar-item" data-tab="school-generator">
+                        <i class="fa-solid fa-sliders"></i>
+                        <span>Generator Panel</span>
+                    </a>
+                    <a href="#school-timetable" class="sidebar-item school-sidebar-item" data-tab="school-timetable">
+                        <i class="fa-solid fa-calendar-days"></i>
+                        <span>Timetable</span>
+                    </a>
+                </div>
+
+                <div class="sidebar-footer">
+                    <div class="sidebar-card">
+                        <i class="fa-solid fa-school core-icon"></i>
+                        <h4>School Schedule Engine</h4>
+                        <p>Optimized for conflict-free teacher & class scheduling.</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- TAB 0: SCHOOL HOME PAGE -->
+                <div class="tab-panel school-tab-panel active" id="school-tab-home">
+                    <div class="hero-section">
+                        <div class="hero-text-content">
+                            <div class="badge"><i class="fa-solid fa-circle-check"></i> Conflict-Free Generation</div>
+                            <h1 class="hero-title">School <br><span class="gradient-text">Timetable Generator</span></h1>
+                            <p class="hero-subtitle">Generate conflict-free class and teacher schedules instantly. Perfect for managing grades, subjects, and weekly period allocations.</p>
+                            
+                            <div class="hero-actions">
+                                <button type="button" id="school-hero-start-btn" class="btn btn-primary btn-lg">
+                                    <i class="fa-solid fa-sliders"></i> Start Scheduling
+                                </button>
+                            </div>
+
+                            <div class="hero-stats-mini">
+                                <div class="mini-stat">
+                                    <span class="stat-number">100%</span>
+                                    <span class="stat-label">Conflict Free</span>
+                                </div>
+                                <div class="mini-stat">
+                                    <span class="stat-number">&lt; 2s</span>
+                                    <span class="stat-label">Evolution Time</span>
+                                </div>
+                                <div class="mini-stat">
+                                    <span class="stat-number">Auto</span>
+                                    <span class="stat-label">Teacher Allocation</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="hero-image-container">
+                            <svg class="hero-illustration" viewBox="0 0 500 500" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="max-width: 440px; border-radius: var(--radius-lg); filter: drop-shadow(0 18px 36px rgba(244, 162, 97, 0.28));">
+                                <defs>
+                                    <linearGradient id="schBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#FFFDF9"/>
+                                        <stop offset="50%" stop-color="#FFF8EE"/>
+                                        <stop offset="100%" stop-color="#F5EBE0"/>
+                                    </linearGradient>
+                                    <linearGradient id="schRoof" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#E76F51"/>
+                                        <stop offset="100%" stop-color="#C85236"/>
+                                    </linearGradient>
+                                    <linearGradient id="schWall" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stop-color="#FFFFFF"/>
+                                        <stop offset="100%" stop-color="#FFF3E0"/>
+                                    </linearGradient>
+                                    <linearGradient id="schGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#F9C784"/>
+                                        <stop offset="100%" stop-color="#F4A261"/>
+                                    </linearGradient>
+                                    <linearGradient id="schDoor" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stop-color="#F4A261"/>
+                                        <stop offset="100%" stop-color="#E76F51"/>
+                                    </linearGradient>
+                                </defs>
+
+                                <!-- Background Card Frame -->
+                                <rect x="8" y="8" width="484" height="484" rx="36" fill="url(#schBg)" stroke="#F2E4D5" stroke-width="3"/>
+
+                                <!-- Sun & Warm Rays -->
+                                <circle cx="410" cy="80" r="50" fill="#FFE0B2" opacity="0.5"/>
+                                <circle cx="410" cy="80" r="34" fill="#F9C784"/>
+                                <line x1="410" y1="30" x2="410" y2="20" stroke="#F9C784" stroke-width="3" stroke-linecap="round"/>
+                                <line x1="460" y1="80" x2="470" y2="80" stroke="#F9C784" stroke-width="3" stroke-linecap="round"/>
+                                <line x1="445" y1="45" x2="453" y2="37" stroke="#F9C784" stroke-width="3" stroke-linecap="round"/>
+
+                                <!-- Soft Clouds -->
+                                <path d="M 60 90 Q 75 70 95 80 Q 110 65 130 80 Q 145 75 150 90 Z" fill="#FFFFFF" opacity="0.95"/>
+                                <path d="M 270 100 Q 282 85 300 92 Q 312 80 328 92 Q 340 88 345 100 Z" fill="#FFFFFF" opacity="0.85"/>
+
+                                <!-- Birds in Sky -->
+                                <path d="M 170 65 Q 175 58 180 65 Q 185 58 190 65" fill="none" stroke="#606E80" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M 200 75 Q 204 70 208 75 Q 212 70 216 75" fill="none" stroke="#606E80" stroke-width="1.8" stroke-linecap="round"/>
+
+                                <!-- Trees (Background Left & Right) -->
+                                <path d="M 45 350 C 35 280 115 280 105 350 Z" fill="#81C784"/>
+                                <path d="M 55 350 C 48 300 102 300 95 350 Z" fill="#66BB6A"/>
+                                <rect x="71" y="345" width="8" height="25" fill="#6D4C41"/>
+
+                                <path d="M 395 350 C 385 280 465 280 455 350 Z" fill="#81C784"/>
+                                <path d="M 405 350 C 398 300 452 300 445 350 Z" fill="#66BB6A"/>
+                                <rect x="421" y="345" width="8" height="25" fill="#6D4C41"/>
+
+                                <!-- Main School Wings (Left & Right Wings) -->
+                                <rect x="65" y="200" width="370" height="155" rx="8" fill="url(#schWall)" stroke="#F4A261" stroke-width="3.5"/>
+                                <polygon points="60,200 250,140 440,200" fill="url(#schRoof)"/>
+
+                                <!-- Roof Details / Eaves -->
+                                <rect x="58" y="196" width="384" height="8" rx="3" fill="#C85236"/>
+
+                                <!-- Central Grand Portico / Entrance Tower -->
+                                <rect x="185" y="145" width="130" height="210" fill="#FFFDF9" stroke="#E76F51" stroke-width="3"/>
+                                <polygon points="250,90 178,145 322,145" fill="url(#schRoof)"/>
+
+                                <!-- Clock Tower Spire & Flag -->
+                                <line x1="250" y1="90" x2="250" y2="48" stroke="#2D3748" stroke-width="3"/>
+                                <polygon points="250,48 288,60 250,72" fill="url(#schRoof)"/>
+
+                                <!-- Clock -->
+                                <circle cx="250" cy="175" r="20" fill="#FFFFFF" stroke="#F4A261" stroke-width="3"/>
+                                <circle cx="250" cy="175" r="17" fill="#FFFDF9"/>
+                                <line x1="250" y1="175" x2="250" y2="163" stroke="#2D3748" stroke-width="2.5" stroke-linecap="round"/>
+                                <line x1="250" y1="175" x2="260" y2="175" stroke="#2D3748" stroke-width="2.5" stroke-linecap="round"/>
+                                <circle cx="250" cy="175" r="2.5" fill="#E76F51"/>
+
+                                <!-- "SCHOOL" Plaque Banner -->
+                                <rect x="200" y="212" width="100" height="20" rx="4" fill="url(#schGold)" stroke="#E76F51" stroke-width="1.5"/>
+                                <text x="250" y="226" font-family="'Poppins', sans-serif" font-weight="800" font-size="11" fill="#FFFFFF" text-anchor="middle" letter-spacing="2">SCHOOL</text>
+
+                                <!-- Grand Pillars (4 Pillars) -->
+                                <rect x="195" y="240" width="14" height="110" fill="#FFFFFF" stroke="#F4A261" stroke-width="2"/>
+                                <rect x="220" y="240" width="14" height="110" fill="#FFFFFF" stroke="#F4A261" stroke-width="2"/>
+                                <rect x="266" y="240" width="14" height="110" fill="#FFFFFF" stroke="#F4A261" stroke-width="2"/>
+                                <rect x="291" y="240" width="14" height="110" fill="#FFFFFF" stroke="#F4A261" stroke-width="2"/>
+
+                                <!-- Arched Double Doors -->
+                                <path d="M 232 350 L 232 280 A 18 18 0 0 1 268 280 L 268 350 Z" fill="url(#schDoor)" stroke="#C85236" stroke-width="2"/>
+                                <line x1="250" y1="280" x2="250" y2="350" stroke="#FFFFFF" stroke-width="2"/>
+                                <circle cx="244" cy="318" r="2" fill="#FFFFFF"/>
+                                <circle cx="256" cy="318" r="2" fill="#FFFFFF"/>
+
+                                <!-- Entrance Steps -->
+                                <rect x="175" y="350" width="150" height="8" fill="#E0D2C3" stroke="#B0A090" stroke-width="1.5"/>
+                                <rect x="165" y="358" width="170" height="8" fill="#D5C5B3" stroke="#B0A090" stroke-width="1.5"/>
+
+                                <!-- Left Wing Windows -->
+                                <rect x="85" y="220" width="36" height="42" rx="4" fill="#FFF3E0" stroke="#F4A261" stroke-width="2.5"/>
+                                <line x1="103" y1="220" x2="103" y2="262" stroke="#F4A261" stroke-width="1.5"/>
+                                <line x1="85" y1="241" x2="121" y2="241" stroke="#F4A261" stroke-width="1.5"/>
+
+                                <rect x="135" y="220" width="36" height="42" rx="4" fill="#FFF3E0" stroke="#F4A261" stroke-width="2.5"/>
+                                <line x1="153" y1="220" x2="153" y2="262" stroke="#F4A261" stroke-width="1.5"/>
+                                <line x1="135" y1="241" x2="171" y2="241" stroke="#F4A261" stroke-width="1.5"/>
+
+                                <rect x="85" y="280" width="36" height="42" rx="4" fill="#FFF3E0" stroke="#F4A261" stroke-width="2.5"/>
+                                <line x1="103" y1="280" x2="103" y2="322" stroke="#F4A261" stroke-width="1.5"/>
+                                <line x1="85" y1="301" x2="121" y2="301" stroke="#F4A261" stroke-width="1.5"/>
+
+                                <rect x="135" y="280" width="36" height="42" rx="4" fill="#FFF3E0" stroke="#F4A261" stroke-width="2.5"/>
+                                <line x1="153" y1="280" x2="153" y2="322" stroke="#F4A261" stroke-width="1.5"/>
+                                <line x1="135" y1="301" x2="171" y2="301" stroke="#F4A261" stroke-width="1.5"/>
+
+                                <!-- Right Wing Windows -->
+                                <rect x="329" y="220" width="36" height="42" rx="4" fill="#FFF3E0" stroke="#F4A261" stroke-width="2.5"/>
+                                <line x1="347" y1="220" x2="347" y2="262" stroke="#F4A261" stroke-width="1.5"/>
+                                <line x1="329" y1="241" x2="365" y2="241" stroke="#F4A261" stroke-width="1.5"/>
+
+                                <rect x="379" y="220" width="36" height="42" rx="4" fill="#FFF3E0" stroke="#F4A261" stroke-width="2.5"/>
+                                <line x1="397" y1="220" x2="397" y2="262" stroke="#F4A261" stroke-width="1.5"/>
+                                <line x1="379" y1="241" x2="415" y2="241" stroke="#F4A261" stroke-width="1.5"/>
+
+                                <rect x="329" y="280" width="36" height="42" rx="4" fill="#FFF3E0" stroke="#F4A261" stroke-width="2.5"/>
+                                <line x1="347" y1="280" x2="347" y2="322" stroke="#F4A261" stroke-width="1.5"/>
+                                <line x1="329" y1="301" x2="365" y2="301" stroke="#F4A261" stroke-width="1.5"/>
+
+                                <rect x="379" y="280" width="36" height="42" rx="4" fill="#FFF3E0" stroke="#F4A261" stroke-width="2.5"/>
+                                <line x1="397" y1="280" x2="397" y2="322" stroke="#F4A261" stroke-width="1.5"/>
+                                <line x1="379" y1="301" x2="415" y2="301" stroke="#F4A261" stroke-width="1.5"/>
+
+                                <!-- Campus Courtyard & Paved Pathway -->
+                                <rect x="20" y="366" width="460" height="96" rx="16" fill="#A5D6A7" opacity="0.4"/>
+                                <polygon points="160,366 340,366 380,462 120,462" fill="#F4A261" opacity="0.3"/>
+                                <polygon points="175,366 325,366 360,462 140,462" fill="#F9C784" opacity="0.5"/>
+
+                                <!-- Flower Bushes near path -->
+                                <circle cx="130" cy="385" r="14" fill="#81C784"/>
+                                <circle cx="122" cy="380" r="10" fill="#E76F51"/>
+                                <circle cx="138" cy="380" r="9" fill="#F4A261"/>
+
+                                <circle cx="370" cy="385" r="14" fill="#81C784"/>
+                                <circle cx="362" cy="380" r="10" fill="#F4A261"/>
+                                <circle cx="378" cy="380" r="9" fill="#E76F51"/>
+
+                                <!-- ================= SCHOOL CHILDREN WALKING TOWARDS SCHOOL ================= -->
+
+                                <!-- Student 1 (Boy walking up left side of path towards entrance) -->
+                                <g transform="translate(185, 355) scale(0.82)">
+                                    <!-- Legs walking forward -->
+                                    <rect x="10" y="70" width="6" height="34" rx="3" fill="#2D3748"/>
+                                    <rect x="22" y="66" width="6" height="38" rx="3" fill="#2D3748"/>
+                                    <!-- Shoes -->
+                                    <ellipse cx="13" cy="102" rx="6" ry="3.5" fill="#C85236"/>
+                                    <ellipse cx="25" cy="102" rx="6" ry="3.5" fill="#C85236"/>
+                                    <!-- Torso / Shirt (Back View) -->
+                                    <rect x="6" y="28" width="26" height="42" rx="8" fill="#F4A261"/>
+                                    <!-- Backpack on Back (Facing Away) -->
+                                    <rect x="9" y="32" width="20" height="28" rx="6" fill="#E76F51" stroke="#C85236" stroke-width="1.5"/>
+                                    <rect x="13" y="37" width="12" height="12" rx="3" fill="#F9C784"/>
+                                    <!-- Backpack Shoulder Straps -->
+                                    <path d="M 9 32 C 4 36 4 52 9 58" fill="none" stroke="#C85236" stroke-width="2.5"/>
+                                    <path d="M 29 32 C 34 36 34 52 29 58" fill="none" stroke="#C85236" stroke-width="2.5"/>
+                                    <!-- Head from Back (Full Hair, no face visible) -->
+                                    <circle cx="19" cy="16" r="13" fill="#4E342E"/>
+                                </g>
+
+                                <!-- Student 2 (Girl in center walking up path towards entrance) -->
+                                <g transform="translate(232, 365) scale(0.88)">
+                                    <!-- Legs walking forward -->
+                                    <rect x="9" y="68" width="5.5" height="34" rx="2.5" fill="#2D3748"/>
+                                    <rect x="19" y="64" width="5.5" height="38" rx="2.5" fill="#2D3748"/>
+                                    <!-- Shoes -->
+                                    <ellipse cx="11" cy="100" rx="5.5" ry="3.5" fill="#E76F51"/>
+                                    <ellipse cx="21" cy="100" rx="5.5" ry="3.5" fill="#E76F51"/>
+                                    <!-- Dress (Back View) -->
+                                    <path d="M 6 26 L 27 26 L 33 66 L 0 66 Z" fill="#E76F51"/>
+                                    <!-- Yellow Backpack on Back -->
+                                    <rect x="9" y="30" width="16" height="26" rx="5" fill="#F9C784" stroke="#F4A261" stroke-width="1.5"/>
+                                    <!-- Head from Back with Pigtails -->
+                                    <circle cx="16.5" cy="14" r="12" fill="#3E2723"/>
+                                    <circle cx="3" cy="16" r="5.5" fill="#3E2723"/>
+                                    <circle cx="30" cy="16" r="5.5" fill="#3E2723"/>
+                                    <circle cx="5" cy="13" r="2.5" fill="#F4A261"/>
+                                    <circle cx="28" cy="13" r="2.5" fill="#F4A261"/>
+                                </g>
+
+                                <!-- Student 3 (Boy on right walking up path towards entrance) -->
+                                <g transform="translate(275, 375) scale(0.92)">
+                                    <!-- Legs walking forward -->
+                                    <rect x="9" y="68" width="6" height="36" rx="3" fill="#2D3748"/>
+                                    <rect x="21" y="64" width="6" height="40" rx="3" fill="#2D3748"/>
+                                    <!-- Shoes -->
+                                    <ellipse cx="12" cy="102" rx="6.5" ry="4" fill="#2D3748"/>
+                                    <ellipse cx="24" cy="102" rx="6.5" ry="4" fill="#2D3748"/>
+                                    <!-- Shirt & Shorts (Back View) -->
+                                    <rect x="7" y="28" width="23" height="26" rx="6" fill="#E76F51"/>
+                                    <rect x="7" y="52" width="23" height="17" rx="4" fill="#3A86C8"/>
+                                    <!-- Backpack on Back -->
+                                    <rect x="10" y="32" width="17" height="26" rx="5" fill="#F4A261" stroke="#E76F51" stroke-width="1.5"/>
+                                    <!-- Head from Back (Cap facing forward/away) -->
+                                    <circle cx="18.5" cy="16" r="12" fill="#4E342E"/>
+                                    <path d="M 6 15 Q 18.5 4 31 15 Z" fill="#F4A261"/>
+                                    <rect x="8" y="14" width="21" height="4" fill="#E76F51"/>
+                                </g>
+
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 1: School Dashboard & Settings -->
+                <div class="tab-panel school-tab-panel" id="school-config">
+                    <div class="dashboard-header">
+                        <h2>Academic Dashboard</h2>
+                        <p class="section-desc">Real-time statistics of classes, teachers, and weekly schedule structure.</p>
+                    </div>
+
+                    <!-- Stats Counters Grid matching University style -->
+                    <div class="dashboard-stats-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 30px;">
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper orange"><i class="fa-solid fa-chalkboard-user"></i></div>
+                            <div class="stat-card-info">
+                                <h3 id="school-stat-classes">1</h3>
+                                <p>Registered Classes</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper gold"><i class="fa-solid fa-user-tie"></i></div>
+                            <div class="stat-card-info">
+                                <h3 id="school-stat-teachers">2</h3>
+                                <p>Registered Teachers</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card form-card" style="max-width: 600px;">
+                        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 20px; color: var(--primary-dark);"><i class="fa-solid fa-sliders"></i> Schedule Structure Settings</h3>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="font-weight:600; font-size:14px; margin-bottom:8px; display:block;">Days per Week</label>
+                            <input type="number" id="school-days-input" class="form-control" value="5" min="1" max="7" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 30px;">
+                            <label style="font-weight:600; font-size:14px; margin-bottom:8px; display:block;">Periods per Day</label>
+                            <input type="number" id="school-periods-input" class="form-control" value="7" min="1" max="12" required>
+                        </div>
+
+                        <button type="button" id="school-btn-start-generator" class="btn btn-primary btn-block">
+                            Proceed to Generator Panel <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB 2: School Generator -->
+                <div class="tab-panel school-tab-panel" id="school-generator">
+                    <form id="school-generator-form">
+                        <div class="generator-header" style="flex-wrap: wrap; gap: 16px;">
+                            <div>
+                                <h2><i class="fa-solid fa-sliders text-orange"></i> Class & Subject Allocation</h2>
+                                <p>Add classes and define teacher assignments with weekly period counts</p>
+                            </div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                                <button type="button" id="school-btn-load-presets" class="btn btn-secondary btn-sm">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Load Demo Data
+                                </button>
+                                <button type="button" id="school-btn-save-details" class="btn btn-success btn-sm">
+                                    <i class="fa-solid fa-floppy-disk"></i> Save Details
+                                </button>
+                                <button type="button" id="school-btn-load-saved-details" class="btn btn-secondary btn-sm" style="border-color: var(--success); color: var(--success);">
+                                    <i class="fa-solid fa-folder-open"></i> Load Saved
+                                </button>
+                                <button type="button" id="school-btn-reset-panel" class="btn btn-danger btn-sm">
+                                    <i class="fa-solid fa-rotate-left"></i> Reset Panel
+                                </button>
+                                <button type="button" id="school-btn-add-class" class="btn btn-secondary btn-sm" style="border-color: var(--primary); color: var(--primary);">
+                                    <i class="fa-solid fa-plus"></i> Add Class
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="school-class-cards-container" style="display: flex; flex-direction: column; gap: 24px; margin-bottom: 32px;">
+                            <!-- Class cards injected here -->
+                        </div>
+
+                        <button type="submit" id="school-btn-generate-submit" class="btn btn-primary btn-lg btn-block">
+                            <i class="fa-solid fa-bolt"></i> Generate School Timetable
+                        </button>
+                    </form>
+                </div>
+
+                <!-- TAB 3: School Timetable Output -->
+                <div class="tab-panel school-tab-panel" id="school-timetable">
+                    <div class="timetable-view-header">
+                        <div>
+                            <h2>Generated School Timetable</h2>
+                            <p class="section-desc">Inspect conflict-free subject schedules for classes and teachers.</p>
+                        </div>
+                        <div class="export-actions">
+                            <button class="btn btn-secondary btn-sm" id="school-btn-export-pdf"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                            <button class="btn btn-secondary btn-sm" id="school-btn-export-excel"><i class="fa-solid fa-file-excel"></i> Excel</button>
+                            <button class="btn btn-secondary btn-sm" id="school-btn-print"><i class="fa-solid fa-print"></i> Print</button>
+                        </div>
+                    </div>
+
+                    <!-- View Mode Toggle: Class Timetable / Teacher Timetable -->
+                    <div class="view-mode-toggle" style="display: flex; gap: 0; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; width: fit-content;">
+                        <button class="view-mode-btn active" id="school-btn-view-class" style="padding: 10px 24px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; background: var(--primary); color: white; transition: all 0.2s;">
+                            <i class="fa-solid fa-calendar-days"></i> Class Timetable
+                        </button>
+                        <button class="view-mode-btn" id="school-btn-view-teacher" style="padding: 10px 24px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; background: var(--bg-card); color: var(--text-secondary); transition: all 0.2s;">
+                            <i class="fa-solid fa-chalkboard-user"></i> Teacher Timetable
+                        </button>
+                    </div>
+
+                    <!-- CLASS TIMETABLE VIEW -->
+                    <div id="school-class-timetable-view">
+                        <div style="margin-bottom: 20px;">
+                            <p style="font-size:12px; font-weight:700; text-transform:uppercase; opacity:0.5; margin-bottom:10px;">Select Class</p>
+                            <div id="school-timetable-class-tabs" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                        </div>
+
+                        <div class="timetable-paper-card" id="school-class-pdf-area">
+                            <div class="timetable-watermark">
+                                School Schedule - Generated Engine
+                            </div>
+                            <div class="timetable-grid-header-meta">
+                                <h3 id="school-current-class-title">Class Timetable</h3>
+                                <p>Weekly conflict-free subject schedule</p>
+                            </div>
+
+                            <div class="timetable-responsive-container" style="overflow-x: auto;">
+                                <table class="timetable-grid" id="school-class-table-grid">
+                                    <thead></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TEACHER TIMETABLE VIEW -->
+                    <div id="school-teacher-timetable-view" style="display: none;">
+                        <div style="margin-bottom: 20px;">
+                            <p style="font-size:12px; font-weight:700; text-transform:uppercase; opacity:0.5; margin-bottom:10px;">Select Teacher</p>
+                            <div id="school-timetable-teacher-tabs" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                        </div>
+
+                        <div class="timetable-paper-card" id="school-teacher-pdf-area">
+                            <div class="timetable-watermark">
+                                Teacher Schedule - Generated Engine
+                            </div>
+                            <div class="timetable-grid-header-meta">
+                                <h3 id="school-current-teacher-title">Teacher Schedule</h3>
+                                <p>Weekly teaching allocation across all classes</p>
+                            </div>
+
+                            <div class="timetable-responsive-container" style="overflow-x: auto;">
+                                <table class="timetable-grid" id="school-teacher-table-grid">
+                                    <thead></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: School About Page -->
+                <div class="tab-panel school-tab-panel" id="school-about">
+                    <div class="about-header" style="text-align: center; margin-bottom: 40px;">
+                        <h2 class="gradient-text" style="font-size: 32px; font-weight: 800; margin-bottom: 10px;">About The Project</h2>
+                        <p class="section-desc" style="font-size: 16px;">Conflict-Free Timetable Generator Engine developed using Genetic Algorithms.</p>
+                    </div>
+
+                    <div class="about-container" style="display: flex; flex-direction: column; gap: 30px; max-width: 1000px; margin: 0 auto; padding: 0 15px;">
+                        
+                        <!-- Project Description -->
+                        <div class="card" style="padding: 32px; border-radius: var(--radius-md); box-shadow: var(--card-shadow); border: 1px solid var(--border-color); background: var(--bg-card); transition: var(--transition);">
+                            <h3 style="font-size: 20px; font-weight: 700; color: var(--primary-dark); margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-circle-info"></i> Project Overview
+                            </h3>
+                            <p style="font-size: 14.5px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 16px;">
+                                This academic scheduler is an intelligent, conflict-free timetable generation engine powered by <strong>Genetic Algorithms</strong>. It optimizes room allocations, faculty schedules, and weekly period constraints to automate institution-wide scheduling. It supports parallel student groups, credit hours, and specialized theory vs. lab assignments, ensuring conflict-free structures with optimal resource usage.
+                            </p>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                                    <div style="color: var(--success); font-size: 18px; margin-top: 2px;"><i class="fa-solid fa-circle-check"></i></div>
+                                    <div>
+                                        <h5 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Zero Conflicts</h5>
+                                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">Resolves overlapping teacher, room, and student schedules automatically.</p>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                                    <div style="color: var(--warning); font-size: 18px; margin-top: 2px;"><i class="fa-solid fa-bolt"></i></div>
+                                    <div>
+                                        <h5 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Genetic Evolution</h5>
+                                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">Uses selection, crossover, and mutation mechanisms to search for optimal solutions.</p>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                                    <div style="color: var(--primary); font-size: 18px; margin-top: 2px;"><i class="fa-solid fa-arrows-spin"></i></div>
+                                    <div>
+                                        <h5 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Flexible Constraints</h5>
+                                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">Supports credits, continuous lab sessions, and custom department criteria.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Developers Section -->
+                        <div>
+                            <h3 style="font-size: 20px; font-weight: 700; color: var(--primary-dark); margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-code"></i> Project Developers
+                            </h3>
+                            <div class="developers-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+                                <!-- Developer 1 -->
+                                <div class="card" style="padding: 24px; border-radius: var(--radius-md); box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 20px; border: 1px solid var(--border-color); background: var(--bg-card); transition: var(--transition);">
+                                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #F9C784, #F4A261); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: 700; flex-shrink: 0; box-shadow: 0 4px 10px rgba(244,162,97,0.3);">
+                                        CL
+                                    </div>
+                                    <div>
+                                        <h4 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Chinnamalreddy Lekhana</h4>
+                                        <p style="font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 2px;">CSE Student</p>
+                                        <p style="font-size: 12px; color: var(--text-secondary);">IIITDM Kancheepuram</p>
+                                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+                                            <i class="fa-solid fa-envelope" style="color: var(--primary); font-size: 12px; width: 14px; text-align: center;"></i>
+                                            <a href="mailto:cmlekhana.5@gmail.com" style="color: inherit; text-decoration: none; transition: var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='inherit'">cmlekhana.5@gmail.com</a>
+                                        </p>
+                                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+                                            <i class="fa-brands fa-linkedin" style="color: #0A66C2; font-size: 13px; width: 14px; text-align: center;"></i>
+                                            <a href="https://www.linkedin.com/in/c-m-lekhana-a56974376?utm_source=share_via&amp;utm_content=profile&amp;utm_medium=member_android" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; transition: var(--transition);" onmouseover="this.style.color='#0A66C2'" onmouseout="this.style.color='inherit'">LinkedIn Profile</a>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Developer 2 -->
+                                <div class="card" style="padding: 24px; border-radius: var(--radius-md); box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 20px; border: 1px solid var(--border-color); background: var(--bg-card); transition: var(--transition);">
+                                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #E76F51, #F4A261); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: 700; flex-shrink: 0; box-shadow: 0 4px 10px rgba(231,111,81,0.3);">
+                                        VS
+                                    </div>
+                                    <div>
+                                        <h4 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Veeraboyena Venkata Spoorthy</h4>
+                                        <p style="font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 2px;">CSE Student</p>
+                                        <p style="font-size: 12px; color: var(--text-secondary);">IIITDM Kancheepuram</p>
+                                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+                                            <i class="fa-solid fa-envelope" style="color: var(--primary); font-size: 12px; width: 14px; text-align: center;"></i>
+                                            <a href="mailto:spoorthyyadav8@gmail.com" style="color: inherit; text-decoration: none; transition: var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='inherit'">spoorthyyadav8@gmail.com</a>
+                                        </p>
+                                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+                                            <i class="fa-brands fa-linkedin" style="color: #0A66C2; font-size: 13px; width: 14px; text-align: center;"></i>
+                                            <a href="https://www.linkedin.com/in/spoorthy-veeraboyena-826255383?utm_source=share_via&amp;utm_content=profile&amp;utm_medium=member_android" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; transition: var(--transition);" onmouseover="this.style.color='#0A66C2'" onmouseout="this.style.color='inherit'">LinkedIn Profile</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mentor Section -->
+                        <div>
+                            <h3 style="font-size: 20px; font-weight: 700; color: var(--primary-dark); margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-chalkboard-user"></i> Faculty Mentor
+                            </h3>
+                            <div class="card" style="padding: 28px; border-radius: var(--radius-md); box-shadow: var(--card-shadow); display: flex; flex-direction: row; gap: 24px; border: 1px solid var(--border-color); background: var(--bg-card); align-items: center; flex-wrap: wrap; transition: var(--transition);">
+                                <div style="width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, #2A9D8F, #457B9D); display: flex; align-items: center; justify-content: center; color: white; font-size: 30px; font-weight: 700; flex-shrink: 0; box-shadow: 0 4px 12px rgba(42,157,143,0.3);">
+                                    SH
+                                </div>
+                                <div style="flex: 1; min-width: 250px;">
+                                    <h4 style="font-size: 18px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">Dr. Syed Shahul Hameed A S</h4>
+                                    <p style="font-size: 13.5px; font-weight: 600; color: var(--primary-dark); margin-bottom: 10px;">Assistant Professor</p>
+                                    
+                                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                                        <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary);">
+                                            <i class="fa-solid fa-graduation-cap" style="width: 16px; text-align: center; color: var(--primary);"></i>
+                                            <span>Ph.D., NIT Puducherry</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary);">
+                                            <i class="fa-solid fa-award" style="width: 16px; text-align: center; color: var(--primary);"></i>
+                                            <span>Post-Doctoral, IIT Bombay</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary);">
+                                            <i class="fa-solid fa-envelope" style="width: 16px; text-align: center; color: var(--primary);"></i>
+                                            <a href="mailto:shahulhameed@iiitdm.ac.in" style="color: inherit; text-decoration: none; transition: var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='inherit'">shahulhameed@iiitdm.ac.in</a>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary);">
+                                            <i class="fa-solid fa-globe" style="width: 16px; text-align: center; color: var(--primary);"></i>
+                                            <a href="https://www.iiitdm.ac.in/people/faculty/shahulhameed@iiitdm.ac.in" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; transition: var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='inherit'">Faculty Profile / Contact</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <footer class="app-footer">
+            <div class="footer-container">
+                <div class="footer-brand"><i class="fa-solid fa-school"></i> School Timetable Generator</div>
+                <p class="footer-copy">&copy; 2026 Conflict-Free School Scheduling Engine.</p>
+                <div class="footer-social" style="display: flex; align-items: center; gap: 15px;">
+                    <a href="#school-about" class="footer-link" onclick="event.preventDefault(); showAboutPage();" style="color: var(--primary); font-weight: 600; text-decoration: none; font-size: 13px; cursor: pointer; transition: var(--transition);"><i class="fa-solid fa-circle-info"></i> About Project</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <!-- END SCHOOL APP WRAPPER -->
+
+    <!-- Full-Page About Overlay -->
+    <div id="about-fullpage-overlay">
+        <!-- Topbar with back button -->
+        <div class="about-overlay-topbar">
+            <button class="about-overlay-back" onclick="closeAboutPage()">
+                <i class="fa-solid fa-arrow-left"></i> Back to App
+            </button>
+            <div class="about-overlay-brand">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>Timetable <em>Generator</em></span>
+            </div>
+        </div>
+
+        <!-- About Content -->
+        <div class="about-overlay-body">
+
+            <!-- Hero -->
+            <div class="about-overlay-hero">
+                <h1>About The Project</h1>
+                <p>Conflict-Free Timetable Generator Engine developed using Genetic Algorithms.</p>
+            </div>
+
+            <!-- Project Overview -->
+            <div class="about-ov-card">
+                <div class="about-ov-section-title"><i class="fa-solid fa-circle-info"></i> Project Overview</div>
+                <p style="font-size:14.5px;line-height:1.7;color:var(--text-secondary);">
+                    This academic scheduler is an intelligent, conflict-free timetable generation engine powered by
+                    <strong>Genetic Algorithms</strong>. It optimizes room allocations, faculty schedules, and weekly
+                    period constraints to automate institution-wide scheduling. It supports parallel student groups,
+                    credit hours, and specialized theory vs. lab assignments, ensuring conflict-free structures with
+                    optimal resource usage.
+                </p>
+                <div class="about-ov-features">
+                    <div class="about-ov-feature">
+                        <div class="fi" style="color:var(--success);"><i class="fa-solid fa-circle-check"></i></div>
+                        <div>
+                            <h5>Zero Conflicts</h5>
+                            <p>Resolves overlapping teacher, room, and student schedules automatically.</p>
+                        </div>
+                    </div>
+                    <div class="about-ov-feature">
+                        <div class="fi" style="color:var(--warning);"><i class="fa-solid fa-bolt"></i></div>
+                        <div>
+                            <h5>Genetic Evolution</h5>
+                            <p>Uses selection, crossover, and mutation mechanisms to find optimal solutions.</p>
+                        </div>
+                    </div>
+                    <div class="about-ov-feature">
+                        <div class="fi" style="color:var(--primary);"><i class="fa-solid fa-arrows-spin"></i></div>
+                        <div>
+                            <h5>Flexible Constraints</h5>
+                            <p>Supports credits, continuous lab sessions, and custom department criteria.</p>
+                        </div>
+                    </div>
+                    <div class="about-ov-feature">
+                        <div class="fi" style="color:#2A9D8F;"><i class="fa-solid fa-school"></i></div>
+                        <div>
+                            <h5>University &amp; School</h5>
+                            <p>Dedicated modes for both university departments and school class scheduling.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Developers -->
+            <div>
+                <div class="about-ov-section-title"><i class="fa-solid fa-code"></i> Project Developers</div>
+                <div class="about-ov-dev-grid">
+                    <div class="about-ov-dev-card">
+                        <div class="about-ov-avatar" style="background:linear-gradient(135deg,#F9C784,#F4A261);box-shadow:0 4px 10px rgba(244,162,97,0.3);">CL</div>
+                        <div>
+                            <h4 style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Chinnamalreddy Lekhana</h4>
+                            <p style="font-size:13px;font-weight:600;color:var(--primary);margin-bottom:2px;">CSE Student</p>
+                            <p style="font-size:12px;color:var(--text-secondary);">IIITDM Kancheepuram</p>
+                            <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;display:flex;align-items:center;gap:6px;">
+                                <i class="fa-solid fa-envelope" style="color:var(--primary);font-size:12px;width:14px;text-align:center;"></i>
+                                <a href="mailto:cmlekhana.5@gmail.com" style="color:inherit;text-decoration:none;transition:var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='inherit'">cmlekhana.5@gmail.com</a>
+                            </p>
+                            <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;display:flex;align-items:center;gap:6px;">
+                                <i class="fa-brands fa-linkedin" style="color:#0A66C2;font-size:13px;width:14px;text-align:center;"></i>
+                                <a href="https://www.linkedin.com/in/c-m-lekhana-a56974376?utm_source=share_via&amp;utm_content=profile&amp;utm_medium=member_android" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;transition:var(--transition);" onmouseover="this.style.color='#0A66C2'" onmouseout="this.style.color='inherit'">LinkedIn Profile</a>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="about-ov-dev-card">
+                        <div class="about-ov-avatar" style="background:linear-gradient(135deg,#E76F51,#F4A261);box-shadow:0 4px 10px rgba(231,111,81,0.3);">VS</div>
+                        <div>
+                            <h4 style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Veeraboyena Venkata Spoorthy</h4>
+                            <p style="font-size:13px;font-weight:600;color:var(--primary);margin-bottom:2px;">CSE Student</p>
+                            <p style="font-size:12px;color:var(--text-secondary);">IIITDM Kancheepuram</p>
+                            <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;display:flex;align-items:center;gap:6px;">
+                                <i class="fa-solid fa-envelope" style="color:var(--primary);font-size:12px;width:14px;text-align:center;"></i>
+                                <a href="mailto:spoorthyyadav8@gmail.com" style="color:inherit;text-decoration:none;transition:var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='inherit'">spoorthyyadav8@gmail.com</a>
+                            </p>
+                            <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;display:flex;align-items:center;gap:6px;">
+                                <i class="fa-brands fa-linkedin" style="color:#0A66C2;font-size:13px;width:14px;text-align:center;"></i>
+                                <a href="https://www.linkedin.com/in/spoorthy-veeraboyena-826255383?utm_source=share_via&amp;utm_content=profile&amp;utm_medium=member_android" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;transition:var(--transition);" onmouseover="this.style.color='#0A66C2'" onmouseout="this.style.color='inherit'">LinkedIn Profile</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mentor -->
+            <div>
+                <div class="about-ov-section-title"><i class="fa-solid fa-chalkboard-user"></i> Faculty Mentor</div>
+                <div class="about-ov-mentor-card">
+                    <div class="about-ov-mentor-avatar" style="background:linear-gradient(135deg,#2A9D8F,#457B9D);box-shadow:0 4px 12px rgba(42,157,143,0.3);">SH</div>
+                    <div style="flex:1;min-width:250px;">
+                        <h4 style="font-size:18px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">Dr. Syed Shahul Hameed A S</h4>
+                        <p style="font-size:13.5px;font-weight:600;color:var(--primary-dark);margin-bottom:10px;">Assistant Professor</p>
+                        <div style="display:flex;flex-direction:column;gap:6px;">
+                            <div class="about-ov-meta-row"><i class="fa-solid fa-graduation-cap" style="width:16px;text-align:center;color:var(--primary);"></i><span>Ph.D., NIT Puducherry</span></div>
+                            <div class="about-ov-meta-row"><i class="fa-solid fa-award" style="width:16px;text-align:center;color:var(--primary);"></i><span>Post-Doctoral, IIT Bombay</span></div>
+                            <div class="about-ov-meta-row">
+                                <i class="fa-solid fa-envelope" style="width:16px;text-align:center;color:var(--primary);"></i>
+                                <a href="mailto:shahulhameed@iiitdm.ac.in" style="color:inherit;text-decoration:none;transition:var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='inherit'">shahulhameed@iiitdm.ac.in</a>
+                            </div>
+                            <div class="about-ov-meta-row">
+                                <i class="fa-solid fa-globe" style="width:16px;text-align:center;color:var(--primary);"></i>
+                                <a href="https://www.iiitdm.ac.in/people/faculty/shahulhameed@iiitdm.ac.in" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;transition:var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='inherit'">Faculty Profile / Contact</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- END About Full-Page Overlay -->
+
+    <!-- Client application javascript script files -->
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/school.js"></script>
+    <script>
+        function showAboutPage() {
+            const overlay = document.getElementById('about-fullpage-overlay');
+            if (overlay) {
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                overlay.scrollTop = 0;
+            }
+        }
+        function closeAboutPage() {
+            const overlay = document.getElementById('about-fullpage-overlay');
+            if (overlay) {
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        // Allow Escape key to close
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeAboutPage();
+        });
+    </script>
+</body>
+</html>
