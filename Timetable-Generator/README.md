@@ -1,8 +1,12 @@
-# Timetable Generator - University Web App
+# Timetable Generator – University & School Web App
 
-A modern, responsive, and gorgeous web-based scheduling platform that uses state-of-the-art **Genetic Algorithms (GA)** to evolve conflict-free university schedules for batches, subjects, professors, classrooms, and labs.
+A modern, responsive, and gorgeous web-based scheduling platform that uses state-of-the-art **Genetic Algorithms (GA)** to evolve conflict-free timetables for universities and schools alike.
 
-Inspired by a warm pastry, cream, and soft pastel orange color palette, the user interface features responsive dashboards, dynamic form inputs, live evolutionary generation reports, and high-quality browser downloads.
+Choose between two modes:
+- 🎓 **University Mode** — Batches, subjects, professors, classrooms, and labs
+- 🏫 **School Mode** — Classes, subjects, teachers, and weekly period distribution
+
+Inspired by a warm pastry, cream, and soft pastel orange color palette, the UI features responsive dashboards, dynamic form inputs, live evolutionary generation reports, and high-quality browser downloads.
 
 ---
 
@@ -19,42 +23,45 @@ Inspired by a warm pastry, cream, and soft pastel orange color palette, the user
 
 ---
 
-## 🚀 How to Start the App
-
-The backend is built in **Python Flask** so it runs seamlessly with the python Genetic Algorithm engine.
+## 🚀 How to Run Locally
 
 ### Prerequisites
 
-Make sure you have Python 3 installed. You'll need `Flask` installed. Install it via pip:
+- Python 3.8+
+- pip
 
-```bash
-pip install flask
-```
+### Steps
 
-### Steps to Run
-
-1. Navigate to the project root directory:
+1. **Clone the repository:**
    ```bash
-   cd c:\Users\cmlekhana\Timetable-Generator
+   git clone https://github.com/Lekhana526/Timetable-Generator.git
+   cd Timetable-Generator
    ```
 
-2. Start the Flask application:
+2. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Start the Flask app:**
    ```bash
    python app.py
    ```
 
-3. Open your browser and go to:
-   [http://localhost:5000](http://localhost:5000)
+4. **Open in browser:**
+   ```
+   http://localhost:5000
+   ```
 
 ---
 
-## 🧬 How the Genetic Algorithm Works 
+## 🧬 How the Genetic Algorithm Works
 
 Modern schedule creation is an NP-hard problem. This app solves it using optimization cycles (Generations):
 
-1. **Chromosomes representation**: Timetables are represented as a mapping of batch cells. Periods are divided into Theory slots (morning lectures) and Lab slots (continuous afternoon lab blocks).
+1. **Chromosome Representation**: Timetables are represented as a mapping of batch/class cells. University periods are divided into Theory slots (morning lectures) and Lab slots (continuous afternoon lab blocks).
 2. **Hard Constraints (Penalty: 100 points)**:
-   - *Professor collision*: No lecturer can teach two classes at the same hour.
+   - *Professor/Teacher collision*: No lecturer can teach two classes at the same hour.
    - *Room double-booking*: No lecture room or lab can host more than one class at the same hour.
 3. **Soft Constraints (Penalty: 5 points)**:
    - *Idle periods*: Student schedules shouldn't contain long break blocks or empty spaces.
@@ -62,21 +69,84 @@ Modern schedule creation is an NP-hard problem. This app solves it using optimiz
    - *Topic limits*: Batch subjects are capped at 2 hours maximum per day.
 4. **Crossover & Mutation**:
    - The top 10% best schedules are directly preserved (Elitism).
-   - Remaining variations are loaded via random chromosome joins.
+   - Remaining variations are produced via random chromosome joins.
    - Mutation swaps periods to search for better placements.
-5. **Generations**: Loops for 50 cycles or until a zero-clash structure is resolved.
+5. **Generations**: Loops for 50–80 cycles or until a zero-clash structure is achieved.
 
 ---
 
 ## 📊 Features
 
-- **Interactive Landing Hero**: Beautiful animated SVG vector cards highlighting key stats.
-- **Resource Inventory Dashboard**: Live count tracker showing enrolled batches, teachers, rooms, and generation history metrics.
-- **Dynamic Config Inputs**: Direct list inputs. Hit **Load Demo Data** to instant-fill mock details based on the default university genetic algorithm profile.
-- **Weekly Schedule Sheets**: Color-coded cards reflecting courses, lecturers, and room allocations.
-- **Responsive Navigation**: Includes side bar drawer controllers and mobile slide-down drop menu toggles.
-- **Aesthetic Eye Comfort Mode**: A full CSS variable dark-mode toggle layout.
+### 🎓 University Mode
+- Configure batches with theory subjects (credits) and lab sessions
+- Theory rooms and lab rooms management
+- Group support for parallel sections
+- Lab sessions automatically assigned to continuous afternoon blocks
+
+### 🏫 School Mode
+- Configure multiple classes (e.g. Grade 6-A, Grade 7-B)
+- Assign subjects, teachers, and weekly period counts per class
+- Teacher timetable view — see any teacher's full weekly schedule
+- Automatic clash detection across all classes
+
+### 🛠️ Shared Features
+- **Interactive Landing Hero**: Animated SVG stat cards highlighting key metrics
+- **Dashboard**: Live count tracker for classes, teachers, rooms, and generation history
+- **Load Demo Data**: One-click preset fill with sample university/school data
+- **Weekly Schedule Sheets**: Color-coded cards reflecting courses, lecturers, and rooms
+- **Responsive Navigation**: Sidebar drawer and mobile slide-down menu toggles
+- **Dark Mode**: Full CSS variable dark-mode toggle
 - **Export Formats**:
-  - **PDF Export**: Uses `html2pdf.js` vector capture elements to print landscape documents.
-  - **Excel Export**: Parses dynamic HTML rows into worksheets using `XLSX` (SheetJS).
-  - **Print Dialog**: Preformatted prints styles using `@media print` tags.
+  - 📄 **PDF Export** — `html2pdf.js` landscape document capture
+  - 📊 **Excel Export** — Multi-sheet `.xlsx` via SheetJS (one sheet per class/teacher)
+  - 🖨️ **Print Dialog** — `@media print` preformatted styles
+
+---
+
+## 🗂️ Project Structure
+
+```
+Timetable-Generator/
+├── app.py                  # Flask backend & API routes
+├── timetable_engine.py     # University Genetic Algorithm engine
+├── school_engine.py        # School Genetic Algorithm engine
+├── requirements.txt        # Python dependencies
+├── templates/
+│   └── index.html          # Single-page frontend
+└── static/
+    ├── css/
+    │   └── styles.css      # All styles & dark mode
+    ├── js/
+    │   ├── app.js          # University timetable logic
+    │   └── school.js       # School timetable logic
+    └── assets/
+        └── hero.png        # Hero section image
+```
+
+---
+
+## 🌐 Deployment (Render)
+
+This app is production-ready for [Render](https://render.com):
+
+1. Push this repo to GitHub
+2. Go to Render → **New → Web Service** → Connect your repo
+3. Set the following:
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `gunicorn app:app`
+4. Click **Deploy**!
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Python, Flask |
+| Algorithm | Custom Genetic Algorithm |
+| Frontend | HTML5, CSS3, Vanilla JavaScript |
+| PDF Export | html2pdf.js |
+| Excel Export | SheetJS (XLSX) |
+| Fonts | Google Fonts — Poppins |
+| Icons | Font Awesome 6 |
+| Deployment | Gunicorn + Render |
