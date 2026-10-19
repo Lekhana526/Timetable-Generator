@@ -282,6 +282,200 @@
             .landing-info-strip { padding: 24px 18px; margin-top: 32px; }
             .landing-info-features { grid-template-columns: 1fr; }
         }
+
+        /* ===== MODE SELECT OVERLAY SCROLL FIX ===== */
+        .mode-select-overlay {
+            overflow-y: auto;
+            min-height: 100vh;
+            align-items: flex-start;
+            padding: 40px 24px 80px;
+        }
+        .mode-select-overlay[style*="display: none"] {
+            display: none !important;
+        }
+        .mode-select-container {
+            margin: auto;
+        }
+
+        /* ===== TIMETABLE ANIMATION PREVIEW (properly centered vertical stack) ===== */
+        .tt-preview-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 44px auto 0 auto;
+            width: 100%;
+            max-width: 760px;
+            position: relative;
+            z-index: 2;
+            animation: fadeUp 0.8s ease-out forwards;
+        }
+
+        .tt-preview-label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin: 0 auto 16px auto;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            background: rgba(231, 111, 81, 0.08);
+            padding: 7px 18px;
+            border-radius: 50px;
+            border: 1px solid rgba(231, 111, 81, 0.18);
+            box-shadow: 0 2px 8px rgba(231, 111, 81, 0.08);
+        }
+        .tt-preview-label i { color: var(--primary); font-size: 13px; }
+
+        .tt-mini-wrapper {
+            display: block;
+            width: 100%;
+            max-width: 760px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.90);
+            border: 1.5px solid rgba(231, 111, 81, 0.18);
+            border-radius: 20px;
+            padding: 22px 24px 18px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 10px 32px rgba(231, 111, 81, 0.09);
+            box-sizing: border-box;
+        }
+        body.dark-mode .tt-mini-wrapper {
+            background: rgba(35, 30, 24, 0.88);
+            border-color: rgba(244, 162, 97, 0.18);
+            box-shadow: 0 10px 32px rgba(0,0,0,0.32);
+        }
+
+        /* Grid: day col + 5 period cols */
+        .tt-mini-grid {
+            display: grid;
+            grid-template-columns: 56px repeat(5, 1fr);
+            gap: 6px;
+            font-family: var(--font-stack);
+        }
+
+        /* Header row */
+        .tt-mini-hdr {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            text-align: center;
+            padding: 6px 4px;
+            letter-spacing: 0.3px;
+        }
+        .tt-mini-hdr.tt-day-hdr {
+            color: var(--text-secondary);
+            font-size: 9.5px;
+        }
+
+        /* Day labels */
+        .tt-mini-day {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Subject cells */
+        .tt-mini-cell {
+            border-radius: 8px;
+            padding: 7px 5px;
+            font-size: 9.5px;
+            font-weight: 600;
+            text-align: center;
+            line-height: 1.3;
+            min-height: 38px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(8px) scale(0.9);
+            transition: none;
+        }
+        .tt-mini-cell.tt-empty-cell {
+            background: rgba(231,111,81,0.03);
+            border: 1px dashed rgba(231,111,81,0.18);
+            border-radius: 8px;
+            opacity: 1;
+            transform: none;
+            min-height: 38px;
+        }
+        body.dark-mode .tt-mini-cell.tt-empty-cell {
+            background: rgba(244,162,97,0.04);
+            border-color: rgba(244,162,97,0.15);
+        }
+        .tt-mini-cell .tt-sub {
+            font-size: 7.5px;
+            font-weight: 400;
+            opacity: 0.85;
+            margin-top: 2px;
+        }
+
+        /* Vibrant colors */
+        .tt-mini-cell.tt-c-pink    { background: #EF5E89; color: #fff; }
+        .tt-mini-cell.tt-c-orange  { background: #F4A261; color: #fff; }
+        .tt-mini-cell.tt-c-purple  { background: #AB82C7; color: #fff; }
+        .tt-mini-cell.tt-c-teal    { background: #2A9D8F; color: #fff; }
+        .tt-mini-cell.tt-c-gold    { background: #D4A843; color: #fff; }
+        .tt-mini-cell.tt-c-coral   { background: #E76F51; color: #fff; }
+
+        body.dark-mode .tt-mini-cell.tt-c-pink    { background: rgba(239,94,137,0.88); }
+        body.dark-mode .tt-mini-cell.tt-c-orange  { background: rgba(244,162,97,0.88); }
+        body.dark-mode .tt-mini-cell.tt-c-purple  { background: rgba(171,130,199,0.88); }
+        body.dark-mode .tt-mini-cell.tt-c-teal    { background: rgba(42,157,143,0.88); }
+        body.dark-mode .tt-mini-cell.tt-c-gold    { background: rgba(212,168,67,0.88); }
+        body.dark-mode .tt-mini-cell.tt-c-coral   { background: rgba(231,111,81,0.88); }
+
+        /* Animated visible state */
+        .tt-mini-cell.tt-vis {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            transition: opacity 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+                        transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .tt-mini-cell.tt-vis:not(.tt-empty-cell):hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 5px 14px rgba(0,0,0,0.14);
+        }
+
+        /* Footer */
+        .tt-mini-footer {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: 12px;
+            opacity: 0.6;
+            letter-spacing: 0.4px;
+        }
+
+        /* Spacing for info strip */
+        .landing-info-strip {
+            margin-top: 52px !important;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .tt-mini-grid { grid-template-columns: 42px repeat(5, 1fr); gap: 4px; }
+            .tt-mini-cell { font-size: 8px; min-height: 32px; padding: 5px 3px; }
+            .tt-mini-cell .tt-sub { font-size: 6.5px; }
+            .tt-mini-hdr { font-size: 8.5px; }
+            .tt-mini-wrapper { padding: 16px 14px 12px; border-radius: 14px; }
+        }
+        @media (max-width: 480px) {
+            .tt-mini-grid { grid-template-columns: 32px repeat(5, 1fr); gap: 3px; }
+            .tt-mini-cell { font-size: 7px; min-height: 28px; padding: 4px 2px; border-radius: 5px; }
+            .tt-mini-cell .tt-sub { display: none; }
+            .tt-mini-hdr { font-size: 7.5px; padding: 3px 1px; }
+        }
     </style>
 </head>
 <body>
@@ -359,37 +553,92 @@
                 <!-- UNIVERSITY CARD -->
                 <div class="mode-card" id="btn-select-university-mode">
                     <div class="mode-card-badge">UNIVERSITY</div>
-                    
                     <div class="mode-card-icon-wrapper">
                         <div class="mode-card-icon-glow"></div>
                         <div class="mode-card-icon university-icon">
                             <i class="fa-solid fa-graduation-cap"></i>
                         </div>
                     </div>
-
                     <h3>University Timetable</h3>
                     <p>Designed for colleges and universities with multi-batch departments, theory/lab rooms, credit hours, and parallel student groups.</p>
-                    
                     <button type="button" class="btn btn-primary btn-block landing-btn">Launch University Mode <i class="fa-solid fa-arrow-right"></i></button>
                 </div>
 
                 <!-- SCHOOL CARD -->
                 <div class="mode-card" id="btn-select-mode-school">
                     <div class="mode-card-badge">SCHOOL</div>
-                    
                     <div class="mode-card-icon-wrapper">
                         <div class="mode-card-icon-glow"></div>
                         <div class="mode-card-icon school-icon">
                             <i class="fa-solid fa-school"></i>
                         </div>
                     </div>
-
                     <h3>School Timetable</h3>
                     <p>Tailored for schools with Class/Grade schedules, teacher allocations, and weekly subject periods.</p>
-                    
                     <button type="button" class="btn btn-primary btn-block school-launch-btn landing-btn">Launch School Mode <i class="fa-solid fa-arrow-right"></i></button>
                 </div>
             </div>
+
+            <!-- ===== TIMETABLE ANIMATION PREVIEW ===== -->
+            <div class="tt-preview-section" id="tt-preview-section">
+                <div class="tt-preview-label">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    Watch your timetable come to life
+                </div>
+                <div class="tt-mini-wrapper">
+                    <div class="tt-mini-grid">
+                        <!-- Header row -->
+                        <div class="tt-mini-hdr tt-day-hdr">Day</div>
+                        <div class="tt-mini-hdr">Period 1</div>
+                        <div class="tt-mini-hdr">Period 2</div>
+                        <div class="tt-mini-hdr">Period 3</div>
+                        <div class="tt-mini-hdr">Period 4</div>
+                        <div class="tt-mini-hdr">Period 5</div>
+
+                        <!-- Monday -->
+                        <div class="tt-mini-day">Mon</div>
+                        <div class="tt-mini-cell tt-c-pink" data-tt-delay="0">Hindi<span class="tt-sub">Ms. Priya</span></div>
+                        <div class="tt-mini-cell tt-empty-cell"></div>
+                        <div class="tt-mini-cell tt-c-orange" data-tt-delay="2">Maths<span class="tt-sub">Mr. Kumar</span></div>
+                        <div class="tt-mini-cell tt-empty-cell"></div>
+                        <div class="tt-mini-cell tt-c-coral" data-tt-delay="4">Computer<span class="tt-sub">Mr. Vijay</span></div>
+
+                        <!-- Tuesday -->
+                        <div class="tt-mini-day">Tue</div>
+                        <div class="tt-mini-cell tt-c-teal" data-tt-delay="5">English<span class="tt-sub">Ms. Rao</span></div>
+                        <div class="tt-mini-cell tt-c-orange" data-tt-delay="6">Maths<span class="tt-sub">Mr. Kumar</span></div>
+                        <div class="tt-mini-cell tt-c-purple" data-tt-delay="7">Computer<span class="tt-sub">Mr. Vijay</span></div>
+                        <div class="tt-mini-cell tt-c-pink" data-tt-delay="8">Science<span class="tt-sub">Mr. Sharma</span></div>
+                        <div class="tt-mini-cell tt-c-pink" data-tt-delay="9">Science<span class="tt-sub">Mr. Sharma</span></div>
+
+                        <!-- Wednesday -->
+                        <div class="tt-mini-day">Wed</div>
+                        <div class="tt-mini-cell tt-empty-cell"></div>
+                        <div class="tt-mini-cell tt-c-gold" data-tt-delay="11">Soc. Studies<span class="tt-sub">Ms. Verma</span></div>
+                        <div class="tt-mini-cell tt-c-teal" data-tt-delay="12">English<span class="tt-sub">Ms. Rao</span></div>
+                        <div class="tt-mini-cell tt-c-pink" data-tt-delay="13">Science<span class="tt-sub">Mr. Sharma</span></div>
+                        <div class="tt-mini-cell tt-c-coral" data-tt-delay="14">Hindi<span class="tt-sub">Ms. Priya</span></div>
+
+                        <!-- Thursday -->
+                        <div class="tt-mini-day">Thu</div>
+                        <div class="tt-mini-cell tt-c-pink" data-tt-delay="15">Science<span class="tt-sub">Mr. Sharma</span></div>
+                        <div class="tt-mini-cell tt-c-orange" data-tt-delay="16">Maths<span class="tt-sub">Mr. Kumar</span></div>
+                        <div class="tt-mini-cell tt-empty-cell"></div>
+                        <div class="tt-mini-cell tt-c-orange" data-tt-delay="18">Maths<span class="tt-sub">Mr. Kumar</span></div>
+                        <div class="tt-mini-cell tt-c-coral" data-tt-delay="19">Hindi<span class="tt-sub">Ms. Priya</span></div>
+
+                        <!-- Friday -->
+                        <div class="tt-mini-day">Fri</div>
+                        <div class="tt-mini-cell tt-c-gold" data-tt-delay="20">Soc. Studies<span class="tt-sub">Ms. Verma</span></div>
+                        <div class="tt-mini-cell tt-empty-cell"></div>
+                        <div class="tt-mini-cell tt-c-orange" data-tt-delay="22">Maths<span class="tt-sub">Mr. Kumar</span></div>
+                        <div class="tt-mini-cell tt-c-gold" data-tt-delay="23">Soc. Studies<span class="tt-sub">Ms. Verma</span></div>
+                        <div class="tt-mini-cell tt-c-teal" data-tt-delay="24">English<span class="tt-sub">Ms. Rao</span></div>
+                    </div>
+                    <div class="tt-mini-footer">✦ Auto-Generated &nbsp;&bull;&nbsp; Zero Conflicts &nbsp;&bull;&nbsp; Ready to Export</div>
+                </div>
+            </div>
+            <!-- ===== END TIMETABLE PREVIEW ===== -->
 
             <!-- ===== WHAT IS THIS? INFO STRIP ===== -->
             <div class="landing-info-strip">
@@ -1036,7 +1285,7 @@
         <!-- Sticky Navbar for School -->
         <nav class="navbar">
             <div class="nav-container">
-                <a href="#" class="brand-logo">
+                <a href="#" class="brand-logo" id="school-nav-logo">
                     <div class="logo-icon">
                         <i class="fa-solid fa-school"></i>
                     </div>
@@ -1122,7 +1371,7 @@
                             </div>
                         </div>
                         <div class="hero-image-container">
-                            <svg class="hero-illustration" viewBox="0 0 500 500" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="max-width: 440px; border-radius: var(--radius-lg); filter: drop-shadow(0 18px 36px rgba(244, 162, 97, 0.28));">
+                            <svg class="hero-illustration" viewBox="0 0 500 500" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="max-width: 440px; border-radius: var(--radius-lg); filter: drop-shadow(0 18px 36px rgba(244, 162, 97, 0.28));">
                                 <defs>
                                     <linearGradient id="schBg" x1="0%" y1="0%" x2="100%" y2="100%">
                                         <stop offset="0%" stop-color="#FFFDF9"/>
@@ -1780,5 +2029,64 @@
             if (e.key === 'Escape') closeAboutPage();
         });
     </script>
+
+    <!-- Timetable Preview Animation Script -->
+    <script>
+    (function() {
+        var section = document.getElementById('tt-preview-section');
+        if (!section) return;
+        var cells = section.querySelectorAll('.tt-mini-cell[data-tt-delay]');
+        var loopTimer = null;
+        var timeouts = [];
+
+        function clearAllTimeouts() {
+            timeouts.forEach(function(t) { clearTimeout(t); });
+            timeouts = [];
+        }
+
+        function animateCells() {
+            clearAllTimeouts();
+            cells.forEach(function(c) { c.classList.remove('tt-vis'); });
+            cells.forEach(function(c) {
+                var delay = parseInt(c.getAttribute('data-tt-delay'), 10);
+                var t = setTimeout(function() { 
+                    c.classList.add('tt-vis'); 
+                }, delay * 50 + 100);
+                timeouts.push(t);
+            });
+        }
+
+        function startLoop() {
+            if (loopTimer) return;
+            animateCells();
+            loopTimer = setInterval(animateCells, 5200);
+        }
+
+        function stopLoop() {
+            if (loopTimer) { clearInterval(loopTimer); loopTimer = null; }
+            clearAllTimeouts();
+        }
+
+        var overlay = document.getElementById('mode-select-screen');
+        var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    startLoop();
+                } else {
+                    stopLoop();
+                    cells.forEach(function(c) { c.classList.remove('tt-vis'); });
+                }
+            });
+        }, { 
+            root: overlay || null,
+            threshold: 0.15 
+        });
+
+        observer.observe(section);
+        // Fallback kick-off in case observer takes a moment
+        setTimeout(startLoop, 300);
+    })();
+    </script>
+
 </body>
 </html>

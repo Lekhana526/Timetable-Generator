@@ -35,67 +35,140 @@ document.addEventListener("DOMContentLoaded", () => {
     appendBatchCard("", [], []);
 });
 
+// Mode Navigation Functions
+function showLandingPage() {
+    const modeOverlay = document.getElementById('mode-select-screen');
+    const uniApp = document.getElementById('university-app');
+    const schoolApp = document.getElementById('school-app');
+    if (modeOverlay) modeOverlay.style.display = 'flex';
+    if (uniApp) uniApp.style.display = 'none';
+    if (schoolApp) schoolApp.style.display = 'none';
+    localStorage.removeItem('timetable_generator_mode');
+    localStorage.removeItem('timetable_generator_tab');
+    if (window.location.hash && window.location.hash !== '#' && window.location.hash !== '#landing') {
+        history.pushState(null, "", window.location.pathname);
+    }
+    window.scrollTo(0, 0);
+}
+
+function showUniversityMode(tabId = 'home') {
+    const modeOverlay = document.getElementById('mode-select-screen');
+    const uniApp = document.getElementById('university-app');
+    const schoolApp = document.getElementById('school-app');
+    if (modeOverlay) modeOverlay.style.display = 'none';
+    if (uniApp) uniApp.style.display = 'block';
+    if (schoolApp) schoolApp.style.display = 'none';
+    localStorage.setItem('timetable_generator_mode', 'university');
+    if (typeof loadUniversityDetails === 'function') {
+        loadUniversityDetails(true);
+    }
+    const validTabs = ['home', 'dashboard', 'generator', 'timetable', 'about'];
+    const activeTab = validTabs.includes(tabId) ? tabId : 'home';
+    if (window.switchView) {
+        window.switchView(activeTab);
+    }
+    if (window.location.hash !== `#${activeTab}`) {
+        history.pushState(null, "", `#${activeTab}`);
+    }
+    window.scrollTo(0, 0);
+}
+
+function showSchoolMode(tabId = 'school-tab-home') {
+    const modeOverlay = document.getElementById('mode-select-screen');
+    const uniApp = document.getElementById('university-app');
+    const schoolApp = document.getElementById('school-app');
+    if (modeOverlay) modeOverlay.style.display = 'none';
+    if (uniApp) uniApp.style.display = 'none';
+    if (schoolApp) schoolApp.style.display = 'block';
+    localStorage.setItem('timetable_generator_mode', 'school');
+    if (typeof loadSchoolDetails === 'function') {
+        loadSchoolDetails(true);
+    }
+    const container = document.getElementById('school-class-cards-container');
+    if (container && container.children.length === 0 && typeof appendSchoolClassCard === 'function') {
+        appendSchoolClassCard("", []);
+    }
+    const validTabs = ['school-tab-home', 'school-config', 'school-generator', 'school-timetable', 'school-about'];
+    const activeTab = validTabs.includes(tabId) ? tabId : 'school-tab-home';
+    if (typeof window.switchSchoolTab === 'function') {
+        window.switchSchoolTab(activeTab);
+    }
+    if (window.location.hash !== `#${activeTab}`) {
+        history.pushState(null, "", `#${activeTab}`);
+    }
+    window.scrollTo(0, 0);
+}
+
+function handleNavigation() {
+    const hash = (window.location.hash || "").replace(/^#/, "").trim();
+    const uniTabs = ['home', 'dashboard', 'generator', 'timetable', 'about', 'university'];
+    const schoolTabs = ['school', 'school-tab-home', 'school-config', 'school-generator', 'school-timetable', 'school-about'];
+
+    if (!hash || hash === 'landing') {
+        // Default homepage is ALWAYS the landing page when visiting main URL
+        showLandingPage();
+    } else if (schoolTabs.includes(hash)) {
+        showSchoolMode(hash === 'school' ? 'school-tab-home' : hash);
+    } else if (uniTabs.includes(hash)) {
+        showUniversityMode(hash === 'university' ? 'home' : hash);
+    } else {
+        // Unknown hash, fall back to landing page default
+        showLandingPage();
+    }
+}
+
+window.showLandingPage = showLandingPage;
+window.showUniversityMode = showUniversityMode;
+window.showSchoolMode = showSchoolMode;
+window.handleNavigation = handleNavigation;
+
 // App Initializer
 function initApp() {
-    setupModeSelection();
     setupRouting();
     setupFormControls();
     setupExportHandlers();
     setupThemeToggle();
     setupDashboard();
     setupViewModeToggle();
-    // Ensure landing overlay is shown when no mode is selected
-    if (!localStorage.getItem('timetable_generator_mode')) {
-        const modeOverlay = document.getElementById('mode-select-screen');
-        const uniApp = document.getElementById('university-app');
-        const schoolApp = document.getElementById('school-app');
-        if (modeOverlay) modeOverlay.style.display = 'flex';
-        if (uniApp) uniApp.style.display = 'none';
-        if (schoolApp) schoolApp.style.display = 'none';
-    }
+    setupModeSelection();
+    handleNavigation();
 }
 
 function setupModeSelection() {
-    const modeOverlay = document.getElementById('mode-select-screen');
-    const uniApp = document.getElementById('university-app');
-    const schoolApp = document.getElementById('school-app');
-
     const btnUni = document.getElementById('btn-select-university-mode');
     const btnSchool = document.getElementById('btn-select-school-mode') || document.getElementById('btn-select-mode-school');
 
     if (btnUni) {
         btnUni.addEventListener('click', () => {
-            if (modeOverlay) modeOverlay.style.display = 'none';
-            if (uniApp) uniApp.style.display = 'block';
-            if (schoolApp) schoolApp.style.display = 'none';
-            localStorage.setItem('timetable_generator_mode', 'university');
+            showUniversityMode('home');
         });
     }
 
     if (btnSchool) {
         btnSchool.addEventListener('click', () => {
-            if (modeOverlay) modeOverlay.style.display = 'none';
-            if (uniApp) uniApp.style.display = 'none';
-            if (schoolApp) schoolApp.style.display = 'block';
-            localStorage.setItem('timetable_generator_mode', 'school');
-
-            // Ensure initial class card exists in school mode if container is empty
-            const container = document.getElementById('school-class-cards-container');
-            if (container && container.children.length === 0 && typeof appendSchoolClassCard === 'function') {
-                appendSchoolClassCard("", []);
-            }
+            showSchoolMode('school-tab-home');
         });
     }
 
     // Handle all "Switch Mode" buttons
     document.querySelectorAll('.switch-mode-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (modeOverlay) modeOverlay.style.display = 'flex';
-            if (uniApp) uniApp.style.display = 'none';
-            if (schoolApp) schoolApp.style.display = 'none';
-            localStorage.removeItem('timetable_generator_mode');
-            localStorage.removeItem('timetable_generator_tab');
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showLandingPage();
         });
+    });
+
+    // Handle brand logos to return to default homepage (landing page)
+    document.querySelectorAll('.brand-logo, #nav-logo, #school-nav-logo').forEach(logo => {
+        logo.addEventListener('click', (e) => {
+            e.preventDefault();
+            showLandingPage();
+        });
+    });
+
+    // Listen to hash changes for browser forward/back buttons
+    window.addEventListener('hashchange', () => {
+        handleNavigation();
     });
 }
 

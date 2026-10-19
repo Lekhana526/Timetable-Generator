@@ -34,17 +34,24 @@ function setupSchoolRouting() {
             e.preventDefault();
             const targetTab = item.getAttribute('data-tab');
             switchSchoolTab(targetTab);
+            history.pushState(null, "", `#${targetTab}`);
         });
     });
 
     const ctaBtn = document.getElementById('school-btn-start-generator');
     if (ctaBtn) {
-        ctaBtn.addEventListener('click', () => switchSchoolTab('school-generator'));
+        ctaBtn.addEventListener('click', () => {
+            switchSchoolTab('school-generator');
+            history.pushState(null, "", '#school-generator');
+        });
     }
 
     const heroCtaBtn = document.getElementById('school-hero-start-btn');
     if (heroCtaBtn) {
-        heroCtaBtn.addEventListener('click', () => switchSchoolTab('school-generator'));
+        heroCtaBtn.addEventListener('click', () => {
+            switchSchoolTab('school-generator');
+            history.pushState(null, "", '#school-generator');
+        });
     }
 }
 
@@ -935,45 +942,9 @@ function resetSchoolPanel() {
 }
 
 function restoreStateOnLoad() {
-    const savedMode = localStorage.getItem('timetable_generator_mode');
-    const savedTab = localStorage.getItem('timetable_generator_tab');
-
-    const modeOverlay = document.getElementById('mode-select-screen');
-    const uniApp = document.getElementById('university-app');
-    const schoolApp = document.getElementById('school-app');
-
-    if (savedMode === 'university') {
-        if (modeOverlay) modeOverlay.style.display = 'none';
-        if (uniApp) uniApp.style.display = 'block';
-        if (schoolApp) schoolApp.style.display = 'none';
-
-        // Load saved details silently
-        if (typeof loadUniversityDetails === 'function') {
-            loadUniversityDetails(true);
-        }
-
-        // Restore tab
-        let tab = savedTab || 'home';
-        // Validate tab
-        if (['home', 'dashboard', 'generator', 'timetable', 'about'].includes(tab)) {
-            if (window.switchView) {
-                window.switchView(tab);
-            }
-        }
-    } else if (savedMode === 'school') {
-        if (modeOverlay) modeOverlay.style.display = 'none';
-        if (uniApp) uniApp.style.display = 'none';
-        if (schoolApp) schoolApp.style.display = 'block';
-
-        // Load saved details silently
-        loadSchoolDetails(true);
-
-        // Restore tab
-        let tab = savedTab || 'school-tab-home';
-        // Validate tab
-        if (['school-tab-home', 'school-config', 'school-generator', 'school-timetable', 'school-about'].includes(tab)) {
-            switchSchoolTab(tab);
-        }
+    // Rely on centralized navigation router
+    if (typeof window.handleNavigation === 'function') {
+        window.handleNavigation();
     }
 }
 
@@ -982,4 +953,5 @@ window.saveSchoolDetails = saveSchoolDetails;
 window.loadSchoolDetails = loadSchoolDetails;
 window.resetSchoolPanel = resetSchoolPanel;
 window.restoreStateOnLoad = restoreStateOnLoad;
+window.switchSchoolTab = switchSchoolTab;
 
